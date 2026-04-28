@@ -4,7 +4,26 @@ import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, ChevronLeft, ChevronRight, Star } from "lucide-react";
 
-const slides = [
+interface Slide {
+  brand: string;
+  tagline: string;
+  title: string;
+  titleAccent: string;
+  description: string;
+  cta: string;
+  image: string;
+  bgMode: "split" | "fullbleed";
+  bgFrom: string;
+  bgTo: string;
+  accentColor: string;
+  textColor: string;
+  descColor: string;
+  badgeBg: string;
+  overlay?: string;
+  imageClass?: string;
+}
+
+const slides: Slide[] = [
   {
     brand: "Noori Masale",
     tagline: "Estd. 1928 · Premium Heritage",
@@ -74,6 +93,7 @@ const slides = [
     textColor: "text-white",
     descColor: "text-white/70",
     badgeBg: "bg-blue-500/20 border-blue-500/40 text-blue-300",
+    imageClass: "max-h-[550px] w-[700px] max-w-none object-contain translate-y-[10%]",
   },
   {
     brand: "Roopak",
@@ -187,7 +207,7 @@ export default function Hero() {
         </div>
 
         {/* IMAGE CONTENT - FOR SPLIT MODE */}
-        <div className="absolute right-0 top-0 bottom-0 w-1/2 hidden lg:flex items-center justify-center z-20">
+        <div className="absolute right-0 top-0 bottom-0 w-1/2 hidden lg:flex items-center justify-center z-20 overflow-hidden">
           {slide.bgMode === "split" && (
             <AnimatePresence mode="wait">
               <motion.div
@@ -205,7 +225,11 @@ export default function Hero() {
                 <img
                   src={slide.image}
                   alt={slide.brand}
-                  className="relative z-10 max-h-[450px] w-auto object-contain transition-transform duration-700 hover:scale-105"
+                  className={`relative z-10 ${
+                    slide.imageClass 
+                      ? slide.imageClass 
+                      : "max-h-[450px] w-auto object-contain transition-transform duration-700 hover:scale-105"
+                  }`}
                   style={{ filter: "drop-shadow(0 25px 50px rgba(0,0,0,0.4))" }}
                 />
               </motion.div>
