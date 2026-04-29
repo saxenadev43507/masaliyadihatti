@@ -23,9 +23,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const auth = localStorage.getItem('masaliya-admin-auth');
     if (auth === 'true') {
       setIsAuthenticated(true);
+    } else {
+      setIsAuthenticated(false);
     }
     setIsLoading(false);
-  }, []);
+  }, [pathname]);
 
   // Redirect to login if not authenticated (must be in useEffect, not during render)
   useEffect(() => {
