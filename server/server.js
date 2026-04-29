@@ -3,11 +3,11 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import connectDB from './config/db.js';
 import productRoutes from './routes/productRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 
 dotenv.config();
 
-// Usually we would connect to db here, but for initial testing we might bypass it
-// if the user hasn't set up the mongodb cluster. We'll attempt anyway.
+// Connect to MongoDB if URI is provided
 try {
    if(process.env.MONGO_URI) {
        connectDB();
@@ -24,10 +24,11 @@ app.use(cors());
 app.use(express.json());
 
 app.get('/', (req, res) => {
-    res.send('API is running...');
+    res.send('Masaliya Di Hatti API is running...');
 });
 
 app.use('/api/products', productRoutes);
+app.use('/api/admin', adminRoutes);
 
 const PORT = process.env.PORT || 5000;
 

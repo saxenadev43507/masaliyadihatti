@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Open_Sans } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/header/Navbar";
-import Footer from "@/components/footer/Footer";
+import { CartProvider } from "@/context/CartContext";
+import LayoutShell from "@/components/LayoutShell";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -30,11 +30,9 @@ export default function RootLayout({
       className={`${playfair.variable} ${openSans.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans bg-white text-gray-900">
-        <Navbar />
-        <main className="flex-grow">
-          {children}
-        </main>
-        <Footer />
+        <CartProvider>
+          <LayoutShell>{children}</LayoutShell>
+        </CartProvider>
       </body>
     </html>
   );

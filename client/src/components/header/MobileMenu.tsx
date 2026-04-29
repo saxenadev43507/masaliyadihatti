@@ -5,6 +5,40 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import SearchBar from './SearchBar';
 
+const menuRoutes: Record<string, string> = {
+  Home: '/',
+  Shop: '/shop',
+  Categories: '/categories',
+  Brands: '/brands',
+  Wholesale: '/wholesale',
+  About: '/about',
+  Contact: '/contact',
+};
+
+const subRoutes: Record<string, Record<string, string>> = {
+  Shop: {
+    "All Products": "/shop",
+    "Best Sellers": "/shop?category=Best+Sellers",
+    "New Arrivals": "/shop?category=New+Arrivals",
+  },
+  Categories: {
+    "Whole Spices": "/shop",
+    "Ground Spices": "/shop",
+    "Blended Masala": "/shop",
+    "Premium Range": "/shop",
+  },
+  Brands: {
+    "Roopak": "/brands",
+    "Shan-E-Delhi": "/brands",
+    "Nawab Secret": "/brands",
+    "Noori": "/brands",
+  },
+  Wholesale: {
+    "Bulk Orders": "/wholesale",
+    "Distributor Enquiry": "/wholesale",
+  },
+};
+
 export default function MobileMenu({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boolean) => void }) {
   const [openSection, setOpenSection] = useState<string | null>(null);
 
@@ -12,13 +46,14 @@ export default function MobileMenu({ isOpen, setIsOpen }: { isOpen: boolean, set
     setOpenSection(openSection === section ? null : section);
   };
 
-  const menuStruct = {
+  const menuStruct: Record<string, string[]> = {
     Home: [],
     Shop: ["All Products", "Best Sellers", "New Arrivals"],
     Categories: ["Whole Spices", "Ground Spices", "Blended Masala", "Premium Range"],
     Brands: ["Roopak", "Shan-E-Delhi", "Nawab Secret", "Noori"],
     Wholesale: ["Bulk Orders", "Distributor Enquiry"],
-    Recipes: []
+    About: [],
+    Contact: [],
   };
 
   return (
@@ -57,7 +92,7 @@ export default function MobileMenu({ isOpen, setIsOpen }: { isOpen: boolean, set
                 {Object.entries(menuStruct).map(([key, items], i) => (
                   <li key={i} className="mb-1">
                     {items.length === 0 ? (
-                      <Link href="/" className="block py-3 px-4 text-gray-800 font-bold tracking-wider hover:bg-accent/5 hover:text-accent rounded-lg transition-colors" onClick={() => setIsOpen(false)}>{key}</Link>
+                      <Link href={menuRoutes[key] || '/'} className="block py-3 px-4 text-gray-800 font-bold tracking-wider hover:bg-accent/5 hover:text-accent rounded-lg transition-colors" onClick={() => setIsOpen(false)}>{key}</Link>
                     ) : (
                       <>
                         <button 
@@ -76,9 +111,12 @@ export default function MobileMenu({ isOpen, setIsOpen }: { isOpen: boolean, set
                               className="overflow-hidden bg-gray-50 rounded-lg mx-2 mt-1"
                             >
                               <ul className="py-2 px-6">
+                                <li>
+                                  <Link href={menuRoutes[key] || '/'} className="block py-2 text-accent font-bold hover:text-accent" onClick={() => setIsOpen(false)}>View All {key}</Link>
+                                </li>
                                 {items.map((sub, j) => (
                                   <li key={j}>
-                                    <Link href="#" className="block py-2 text-gray-600 font-medium hover:text-accent" onClick={() => setIsOpen(false)}>{sub}</Link>
+                                    <Link href={subRoutes[key]?.[sub] || '/'} className="block py-2 text-gray-600 font-medium hover:text-accent" onClick={() => setIsOpen(false)}>{sub}</Link>
                                   </li>
                                 ))}
                               </ul>
@@ -93,8 +131,8 @@ export default function MobileMenu({ isOpen, setIsOpen }: { isOpen: boolean, set
             </div>
             
             <div className="p-6 border-t border-gray-100 bg-gray-50">
-              <Link href="/login" className="block w-full bg-primary hover:bg-accent text-white font-bold uppercase tracking-widest py-3 text-center rounded-lg shadow disabled transition-colors">
-                Login / Register
+              <Link href="/admin/login" className="block w-full bg-primary hover:bg-accent text-white font-bold uppercase tracking-widest py-3 text-center rounded-lg shadow disabled transition-colors" onClick={() => setIsOpen(false)}>
+                Admin Login
               </Link>
             </div>
           </motion.div>

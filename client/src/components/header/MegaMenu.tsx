@@ -40,7 +40,8 @@ const menuItems = [
     hasMegaMenu: true,
     type: 'wholesale'
   },
-  { name: 'Recipes', href: '/recipes' },
+  { name: 'About', href: '/about' },
+  { name: 'Contact', href: '/contact' },
 ];
 
 const categoryData = {

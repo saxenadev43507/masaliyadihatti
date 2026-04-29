@@ -12,10 +12,12 @@ import {
 import MegaMenu from './MegaMenu';
 import MobileMenu from './MobileMenu';
 import SearchBar from './SearchBar';
+import { useCart } from '@/context/CartContext';
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { totalItems } = useCart();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -49,8 +51,8 @@ export default function Navbar() {
             </div>
 
             <div className="flex items-center gap-4">
-              <Link href="#" className="hover:text-primary transition-colors hidden sm:inline-block">Wholesale Enquiry</Link>
-              <Link href="#" className="hover:text-primary transition-colors sm:hidden">Wholesale</Link>
+              <Link href="/wholesale" className="hover:text-primary transition-colors hidden sm:inline-block">Wholesale Enquiry</Link>
+              <Link href="/wholesale" className="hover:text-primary transition-colors sm:hidden">Wholesale</Link>
             </div>
           </div>
         </div>
@@ -74,7 +76,7 @@ export default function Navbar() {
               </div>
 
               <div className="flex items-center gap-6">
-                <Link href="#" className="hidden sm:flex items-center gap-2 group transition-colors">
+                <Link href="/admin/login" className="hidden sm:flex items-center gap-2 group transition-colors">
                   <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-accent/10 transition-colors">
                     <User className="w-5 h-5 text-gray-700 group-hover:text-accent" />
                   </div>
@@ -84,14 +86,14 @@ export default function Navbar() {
                   </div>
                 </Link>
 
-                <button className="relative group flex items-center gap-2" title="Cart">
+                <Link href="/cart" className="relative group flex items-center gap-2" title="Cart">
                    <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-accent/10 transition-colors">
                     <ShoppingBag className="w-5 h-5 text-gray-700 group-hover:text-accent" />
                     <span className="absolute -top-1 -right-1 bg-accent text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                      0
+                      {totalItems}
                     </span>
                   </div>
-                </button>
+                </Link>
 
                 <button 
                   onClick={() => setMobileMenuOpen(true)}

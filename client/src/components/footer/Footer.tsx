@@ -35,20 +35,20 @@ export default function Footer() {
         <div className="md:col-span-2">
           <h4 className="text-primary font-bold uppercase tracking-widest text-sm mb-8">Shop</h4>
           <ul className="space-y-4 text-sm font-medium text-gray-500">
-            <li><Link href="/" className="hover:text-accent hover:pl-2 transition-all block">Blended Spices</Link></li>
-            <li><Link href="/" className="hover:text-accent hover:pl-2 transition-all block">Whole Spices</Link></li>
-            <li><Link href="/" className="hover:text-accent hover:pl-2 transition-all block">Pickles & Chutneys</Link></li>
-            <li><Link href="/" className="hover:text-accent hover:pl-2 transition-all block">Luxury Gifts</Link></li>
+            <li><Link href="/shop" className="hover:text-accent hover:pl-2 transition-all block">Blended Spices</Link></li>
+            <li><Link href="/shop" className="hover:text-accent hover:pl-2 transition-all block">Whole Spices</Link></li>
+            <li><Link href="/shop" className="hover:text-accent hover:pl-2 transition-all block">Pickles & Chutneys</Link></li>
+            <li><Link href="/shop" className="hover:text-accent hover:pl-2 transition-all block">Luxury Gifts</Link></li>
           </ul>
         </div>
 
         <div className="md:col-span-2">
           <h4 className="text-primary font-bold uppercase tracking-widest text-sm mb-8">Support</h4>
           <ul className="space-y-4 text-sm font-medium text-gray-500">
-            <li><Link href="/" className="hover:text-accent hover:pl-2 transition-all block">Track Order</Link></li>
-            <li><Link href="/" className="hover:text-accent hover:pl-2 transition-all block">Shipping Policy</Link></li>
-            <li><Link href="/" className="hover:text-accent hover:pl-2 transition-all block">Return Policy</Link></li>
-            <li><Link href="/" className="hover:text-accent hover:pl-2 transition-all block">Contact Us</Link></li>
+            <li><Link href="/about" className="hover:text-accent hover:pl-2 transition-all block">About Us</Link></li>
+            <li><Link href="/wholesale" className="hover:text-accent hover:pl-2 transition-all block">Wholesale</Link></li>
+            <li><Link href="/contact" className="hover:text-accent hover:pl-2 transition-all block">Contact Us</Link></li>
+            <li><Link href="/admin/login" className="hover:text-accent hover:pl-2 transition-all block">Admin</Link></li>
           </ul>
         </div>
 
@@ -67,8 +67,8 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center text-[10px] text-gray-400 font-bold tracking-wider uppercase">
         <p>&copy; 2026 Masaliya Di Hatti. All rights reserved.</p>
         <div className="flex space-x-6 mt-6 md:mt-0">
-          <Link href="/" className="hover:text-accent transition-colors">Privacy Policy</Link>
-          <Link href="/" className="hover:text-accent transition-colors">Terms of Service</Link>
+          <Link href="/privacy-policy" className="hover:text-accent transition-colors">Privacy Policy</Link>
+          <Link href="/terms" className="hover:text-accent transition-colors">Terms of Service</Link>
         </div>
       </div>
     </footer>
