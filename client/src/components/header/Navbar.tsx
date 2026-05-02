@@ -13,11 +13,16 @@ import MegaMenu from './MegaMenu';
 import MobileMenu from './MobileMenu';
 import SearchBar from './SearchBar';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { totalItems } = useCart();
+  const { user, setShowAuthModal } = useAuth();
+
+  const userInitial = user?.user_metadata?.full_name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || 'U';
+  const userName = user?.user_metadata?.full_name || 'My Account';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -76,15 +81,27 @@ export default function Navbar() {
               </div>
 
               <div className="flex items-center gap-6">
-                <Link href="/admin/login" className="hidden sm:flex items-center gap-2 group transition-colors">
-                  <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-accent/10 transition-colors">
-                    <User className="w-5 h-5 text-gray-700 group-hover:text-accent" />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Welcome</span>
-                    <span className="text-sm font-bold text-gray-800">My Account</span>
-                  </div>
-                </Link>
+                {user ? (
+                  <Link href="/account" className="hidden sm:flex items-center gap-2 group transition-colors">
+                    <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-white font-bold text-sm">
+                      {userInitial}
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Welcome</span>
+                      <span className="text-sm font-bold text-gray-800 truncate max-w-[100px]">{userName}</span>
+                    </div>
+                  </Link>
+                ) : (
+                  <button onClick={() => setShowAuthModal(true)} className="hidden sm:flex items-center gap-2 group transition-colors">
+                    <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-accent/10 transition-colors">
+                      <User className="w-5 h-5 text-gray-700 group-hover:text-accent" />
+                    </div>
+                    <div className="flex flex-col text-left">
+                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Sign In</span>
+                      <span className="text-sm font-bold text-gray-800">My Account</span>
+                    </div>
+                  </button>
+                )}
 
                 <Link href="/cart" className="relative group flex items-center gap-2" title="Cart">
                    <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-accent/10 transition-colors">

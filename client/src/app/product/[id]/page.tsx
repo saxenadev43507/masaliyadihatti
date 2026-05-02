@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { ShoppingCart, Heart, Star, ShieldCheck, ChevronRight, Minus, Plus, Truck, RotateCcw, Award } from 'lucide-react';
 import { allProducts } from '@/data/products';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 import ProductCard from '@/components/products/ProductCard';
 
 export default function ProductDetailPage() {
@@ -14,6 +15,7 @@ export default function ProductDetailPage() {
   const productId = Number(params.id);
   const product = allProducts.find(p => p.id === productId);
   const { addToCart } = useCart();
+  const { user, setShowAuthModal } = useAuth();
   const [quantity, setQuantity] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
 
@@ -34,6 +36,10 @@ export default function ProductDetailPage() {
   }
 
   const handleAddToCart = () => {
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
     for (let i = 0; i < quantity; i++) {
       addToCart({ id: product.id, title: product.title, brand: product.brand, price: product.price, image: product.image });
     }

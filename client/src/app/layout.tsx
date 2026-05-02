@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Open_Sans } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
 import LayoutShell from "@/components/LayoutShell";
+import AuthModal from "@/components/auth/AuthModal";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -30,10 +32,14 @@ export default function RootLayout({
       className={`${playfair.variable} ${openSans.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans bg-white text-gray-900">
-        <CartProvider>
-          <LayoutShell>{children}</LayoutShell>
-        </CartProvider>
+        <AuthProvider>
+          <CartProvider>
+            <LayoutShell>{children}</LayoutShell>
+            <AuthModal />
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );
 }
+
