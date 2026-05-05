@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ShoppingCart, Heart, Eye, Star, ShieldCheck } from 'lucide-react';
+import { ShoppingCart, Heart, Star, ShieldCheck } from 'lucide-react';
 
 interface ProductCardProps {
   title: string;
@@ -12,6 +12,7 @@ interface ProductCardProps {
   tags: string[];
   productImage: string;
   overlayText: string;
+  onAddToCart?: () => void;
 }
 
 export default function ProductCard({
@@ -22,6 +23,7 @@ export default function ProductCard({
   tags,
   productImage,
   overlayText,
+  onAddToCart,
 }: ProductCardProps) {
   return (
     <motion.div 
@@ -44,7 +46,6 @@ export default function ProductCard({
 
       {/* Product Image Stage */}
       <div className="relative flex-grow flex items-center justify-center mb-6 pt-8 bg-gray-50 rounded-[1.5rem] overflow-hidden shadow-inner">
-        {/* Subtle texture or noise could be added here, but keeping it clean as requested */}
         <motion.div
           variants={{
             initial: { y: 0, rotate: 0 },
@@ -100,7 +101,14 @@ export default function ProductCard({
         }}
         className="absolute inset-x-6 bottom-6 z-40"
       >
-        <button className="w-full bg-primary text-white py-4 rounded-2xl flex items-center justify-center gap-3 shadow-2xl hover:bg-accent transition-all duration-300 transform active:scale-95">
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onAddToCart?.();
+          }}
+          className="w-full bg-primary text-white py-4 rounded-2xl flex items-center justify-center gap-3 shadow-2xl hover:bg-accent transition-all duration-300 transform active:scale-95"
+        >
           <ShoppingCart className="w-4 h-4" />
           <span className="text-xs font-black uppercase tracking-widest text-white">Add to Collection</span>
         </button>
@@ -116,7 +124,7 @@ export default function ProductCard({
       >
         <div className="bg-white/95 backdrop-blur-md p-4 rounded-2xl border border-gray-100 shadow-xl text-center">
           <p className="text-[11px] font-serif italic text-primary font-bold leading-relaxed">
-            "{overlayText}"
+            &quot;{overlayText}&quot;
           </p>
         </div>
       </motion.div>

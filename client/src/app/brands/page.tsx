@@ -6,6 +6,8 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Star, Award, MapPin } from 'lucide-react';
 import { allProducts } from '@/data/products';
 import ProductCard from '@/components/products/ProductCard';
+import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 
 const brands = [
   {
@@ -83,6 +85,14 @@ const brands = [
 ];
 
 export default function BrandsPage() {
+  const { addToCart } = useCart();
+  const { user, setShowAuthModal } = useAuth();
+
+  const handleAddToCart = (p: { id: number; title: string; brand: string; price: string; image: string }) => {
+    if (!user) { setShowAuthModal(true); return; }
+    addToCart(p);
+  };
+
   return (
     <main className="min-h-screen bg-white pt-16 pb-20">
       {/* Hero */}
@@ -163,7 +173,7 @@ export default function BrandsPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {brandProducts.map(p => (
                       <Link key={p.id} href={`/product/${p.id}`}>
-                        <ProductCard title={p.title} brand={p.brand} price={p.price} rating={p.rating} tags={p.tags} productImage={p.image} overlayText={p.desc} />
+                        <ProductCard title={p.title} brand={p.brand} price={p.price} rating={p.rating} tags={p.tags} productImage={p.image} overlayText={p.desc} onAddToCart={() => handleAddToCart({ id: p.id, title: p.title, brand: p.brand, price: p.price, image: p.image })} />
                       </Link>
                     ))}
                   </div>

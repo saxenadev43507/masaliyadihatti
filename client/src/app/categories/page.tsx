@@ -6,6 +6,8 @@ import { motion } from 'framer-motion';
 import { Flame, Wind, Zap, Crown, Utensils, Sparkles, ArrowRight, ChevronRight } from 'lucide-react';
 import { allProducts } from '@/data/products';
 import ProductCard from '@/components/products/ProductCard';
+import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 
 const spiceTypes = [
   { name: "Whole Spices", slug: "whole", icon: <Flame className="w-6 h-6" />, desc: "Unground seeds, pods, and bark for tempering and slow cooking", color: "from-red-500/10 to-orange-500/10", borderColor: "border-red-200", count: 0 },
@@ -32,6 +34,13 @@ const specialCollections = [
 
 export default function CategoriesPage() {
   const bestSellers = useMemo(() => allProducts.filter(p => p.category === "Best Sellers").slice(0, 4), []);
+  const { addToCart } = useCart();
+  const { user, setShowAuthModal } = useAuth();
+
+  const handleAddToCart = (p: { id: number; title: string; brand: string; price: string; image: string }) => {
+    if (!user) { setShowAuthModal(true); return; }
+    addToCart(p);
+  };
 
   return (
     <main className="min-h-screen bg-white pt-16 pb-20">
@@ -138,7 +147,7 @@ export default function CategoriesPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {bestSellers.map(p => (
             <Link key={p.id} href={`/product/${p.id}`}>
-              <ProductCard title={p.title} brand={p.brand} price={p.price} rating={p.rating} tags={p.tags} productImage={p.image} overlayText={p.desc} />
+              <ProductCard title={p.title} brand={p.brand} price={p.price} rating={p.rating} tags={p.tags} productImage={p.image} overlayText={p.desc} onAddToCart={() => handleAddToCart({ id: p.id, title: p.title, brand: p.brand, price: p.price, image: p.image })} />
             </Link>
           ))}
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -8,21 +8,40 @@ import { ShoppingCart, Heart, Star, ShieldCheck, ChevronRight, Minus, Plus, Truc
 import { allProducts } from '@/data/products';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
+import { getProducts, type DBProduct } from '@/lib/supabase-admin';
 import ProductCard from '@/components/products/ProductCard';
 
 export default function ProductDetailPage() {
   const params = useParams();
   const productId = Number(params.id);
-  const product = allProducts.find(p => p.id === productId);
   const { addToCart } = useCart();
   const { user, setShowAuthModal } = useAuth();
   const [quantity, setQuantity] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
+  const [allProds, setAllProds] = useState<{id: number; title: string; brand: string; category: string; price: string; rating: number; tags: string[]; image: string; desc: string}[]>(allProducts);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getProducts()
+      .then(data => {
+        if (data && data.length > 0) {
+          setAllProds(data.map(p => ({
+            id: p.id!, title: p.title, brand: p.brand, category: p.category,
+            price: p.price, rating: p.rating, tags: p.tags || [],
+            image: p.image_url || '', desc: p.description || ''
+          })));
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const product = allProds.find(p => p.id === productId);
 
   const relatedProducts = useMemo(() => {
     if (!product) return [];
-    return allProducts.filter(p => p.id !== product.id && p.brand === product.brand).slice(0, 4);
-  }, [product]);
+    return allProds.filter(p => p.id !== product.id && p.brand === product.brand).slice(0, 4);
+  }, [product, allProds]);
 
   if (!product) {
     return (
@@ -121,7 +140,7 @@ export default function ProductDetailPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {relatedProducts.map(p => (
               <Link key={p.id} href={`/product/${p.id}`}>
-                <ProductCard title={p.title} brand={p.brand} price={p.price} rating={p.rating} tags={p.tags} productImage={p.image} overlayText={p.desc} />
+                <ProductCard title={p.title} brand={p.brand} price={p.price} rating={p.rating} tags={p.tags} productImage={p.image} overlayText={p.desc} onAddToCart={() => { if (!user) { setShowAuthModal(true); return; } addToCart({ id: p.id, title: p.title, brand: p.brand, price: p.price, image: p.image }); }} />
               </Link>
             ))}
           </div>

@@ -3,7 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Package, ShoppingCart, Settings, LogOut, Menu, X, Crown } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, Settings, LogOut, Menu, Crown } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { checkIsAdmin } from '@/context/AuthContext';
 
 const sidebarLinks = [
   { name: 'Dashboard', href: '/admin', icon: <LayoutDashboard className="w-5 h-5" /> },
@@ -18,25 +20,41 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [adminEmail, setAdminEmail] = useState('');
 
   useEffect(() => {
-    const auth = localStorage.getItem('masaliya-admin-auth');
-    if (auth === 'true') {
-      setIsAuthenticated(true);
-    } else {
-      setIsAuthenticated(false);
-    }
-    setIsLoading(false);
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user) {
+        // Verify admin role from profiles table
+        const isAdmin = await checkIsAdmin(session.user.id);
+        if (isAdmin) {
+          setIsAuthenticated(true);
+          setAdminEmail(session.user.email || '');
+          localStorage.setItem('masaliya-admin-auth', 'true');
+        } else {
+          setIsAuthenticated(false);
+          localStorage.removeItem('masaliya-admin-auth');
+        }
+      } else {
+        setIsAuthenticated(false);
+        localStorage.removeItem('masaliya-admin-auth');
+      }
+      setIsLoading(false);
+    };
+    checkAuth();
   }, [pathname]);
 
-  // Redirect to login if not authenticated (must be in useEffect, not during render)
+  // Redirect to login if not authenticated
   useEffect(() => {
     if (!isLoading && !isAuthenticated && pathname !== '/admin/login') {
       router.push('/admin/login');
     }
   }, [isLoading, isAuthenticated, pathname, router]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     localStorage.removeItem('masaliya-admin-auth');
     setIsAuthenticated(false);
     router.push('/admin/login');
@@ -118,7 +136,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {sidebarLinks.find(l => pathname === l.href || (l.href !== '/admin' && pathname.startsWith(l.href)))?.name || 'Dashboard'}
           </div>
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center text-white text-xs font-black">A</div>
+            <span className="text-xs font-medium text-gray-400 hidden sm:block">{adminEmail}</span>
+            <div className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center text-white text-xs font-black">{adminEmail ? adminEmail.charAt(0).toUpperCase() : 'A'}</div>
           </div>
         </header>
         <main className="flex-1 p-6">{children}</main>

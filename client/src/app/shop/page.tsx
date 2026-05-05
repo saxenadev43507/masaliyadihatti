@@ -15,6 +15,9 @@ import {
 } from 'lucide-react';
 import ProductCard from '@/components/products/ProductCard';
 import { allProducts } from '@/data/products';
+import { getProducts, type DBProduct } from '@/lib/supabase-admin';
+import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 
 const categories = ["All Products", "Best Sellers", "New Arrivals", "Combo Packs"];
 const brands = ["All Brands", "Roopak", "Shan-e-Delhi"];
@@ -27,6 +30,30 @@ function ShopContent() {
   const [activeBrand, setActiveBrand] = useState("All Brands");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("Featured");
+  const [dbProducts, setDbProducts] = useState<DBProduct[]>([]);
+  const { addToCart } = useCart();
+  const { user, setShowAuthModal } = useAuth();
+
+  const handleAddToCart = (product: { id: number; title: string; brand: string; price: string; image: string }) => {
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+    addToCart(product);
+  };
+  const [dbLoaded, setDbLoaded] = useState(false);
+
+  // Fetch products from Supabase
+  useEffect(() => {
+    getProducts()
+      .then(data => {
+        if (data && data.length > 0) {
+          setDbProducts(data);
+        }
+        setDbLoaded(true);
+      })
+      .catch(() => setDbLoaded(true));
+  }, []);
 
   useEffect(() => {
     const cat = searchParams.get('category');
@@ -35,9 +62,27 @@ function ShopContent() {
     }
   }, [searchParams]);
 
+  // Use DB products if available, otherwise static
+  const sourceProducts = useMemo(() => {
+    if (dbProducts.length > 0) {
+      return dbProducts.map(p => ({
+        id: p.id!,
+        title: p.title,
+        brand: p.brand,
+        category: p.category,
+        price: p.price,
+        rating: p.rating,
+        tags: p.tags || [],
+        image: p.image_url || '',
+        desc: p.description || '',
+      }));
+    }
+    return allProducts;
+  }, [dbProducts]);
+
   // Filter and Sort Logic
   const filteredProducts = useMemo(() => {
-    let result = [...allProducts];
+    let result = [...sourceProducts];
 
     // Category Filter
     if (activeCategory !== "All Products") {
@@ -67,7 +112,7 @@ function ShopContent() {
     }
 
     return result;
-  }, [activeCategory, activeBrand, searchQuery, sortBy]);
+  }, [activeCategory, activeBrand, searchQuery, sortBy, sourceProducts]);
 
   return (
     <main className="min-h-screen bg-white pt-16 pb-10">
@@ -192,6 +237,7 @@ function ShopContent() {
                   tags={product.tags}
                   productImage={product.image}
                   overlayText={product.desc}
+                  onAddToCart={() => handleAddToCart({ id: product.id, title: product.title, brand: product.brand, price: product.price, image: product.image })}
                 />
               </motion.div>
             ))}

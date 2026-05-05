@@ -3,6 +3,8 @@
 import React from "react";
 import ProductCard from "@/components/products/ProductCard";
 import { ArrowRight } from "lucide-react";
+import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 
 // Importing 20 products from Roopak and Shan-e-Delhi
 import shahiGaramMasalaImg from "@/components/products/Roopak veg/Shahi Garam Masala.jpg";
@@ -55,6 +57,16 @@ const products = [
 export default function BestSellers() {
   const [showAll, setShowAll] = useState(false);
   const displayedProducts = showAll ? products : products.slice(0, 4);
+  const { addToCart } = useCart();
+  const { user, setShowAuthModal } = useAuth();
+
+  const handleAddToCart = (product: { title: string; brand: string; price: string; image: string }, idx: number) => {
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+    addToCart({ id: idx + 1, title: product.title, brand: product.brand, price: product.price, image: product.image });
+  };
 
   return (
     <section className="py-10 px-4 bg-white border-t border-gray-100">
@@ -77,6 +89,7 @@ export default function BestSellers() {
               tags={product.tags}
               productImage={product.image}
               overlayText={product.desc}
+              onAddToCart={() => handleAddToCart(product, idx)}
             />
           ))}
         </div>

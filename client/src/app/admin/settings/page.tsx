@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { Save, CheckCircle } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Save, CheckCircle, Loader2, Database } from 'lucide-react';
+import { getSettings, upsertSettings } from '@/lib/supabase-admin';
 
 interface SiteSettings {
   storeName: string;
@@ -10,7 +11,6 @@ interface SiteSettings {
   announcement: string;
   currency: string;
   freeShippingMin: string;
-  adminPassword: string;
 }
 
 const defaultSettings: SiteSettings = {
@@ -20,33 +20,74 @@ const defaultSettings: SiteSettings = {
   announcement: "DUE TO ONGOING CARGO DELAY MOST OF THE ITEMS ARE SOLD OUT. PLEASE REACH OUT TO .....",
   currency: "AUD",
   freeShippingMin: "50",
-  adminPassword: "admin123",
 };
 
 export default function AdminSettingsPage() {
   const [settings, setSettings] = useState<SiteSettings>(defaultSettings);
+  const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
+  const loadSettings = useCallback(async () => {
+    setLoading(true);
     try {
-      const s = localStorage.getItem('masaliya-admin-settings');
-      if (s) setSettings(JSON.parse(s));
-    } catch { /* empty */ }
+      const dbSettings = await getSettings();
+      if (Object.keys(dbSettings).length > 0) {
+        setSettings({
+          storeName: dbSettings.storeName || defaultSettings.storeName,
+          email: dbSettings.email || defaultSettings.email,
+          phone: dbSettings.phone || defaultSettings.phone,
+          announcement: dbSettings.announcement || defaultSettings.announcement,
+          currency: dbSettings.currency || defaultSettings.currency,
+          freeShippingMin: dbSettings.freeShippingMin || defaultSettings.freeShippingMin,
+        });
+      }
+    } catch (err) {
+      console.error('Failed to load settings:', err);
+    }
+    setLoading(false);
   }, []);
 
-  const handleSave = (e: React.FormEvent) => {
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    localStorage.setItem('masaliya-admin-settings', JSON.stringify(settings));
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setSaving(true);
+    setError('');
+
+    try {
+      await upsertSettings(settings as unknown as Record<string, string>);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      setError('Failed to save settings. ' + String(err));
+    }
+    setSaving(false);
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-3xl space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-        <p className="text-gray-500 text-sm mt-1">Manage your store configuration</p>
+        <p className="text-gray-500 text-sm mt-1 flex items-center gap-2">
+          <Database className="w-3 h-3" /> Saved to Supabase database
+        </p>
       </div>
+
+      {error && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm font-medium">{error}</div>
+      )}
 
       <form onSubmit={handleSave} className="space-y-8">
         {/* Store Info */}
@@ -102,20 +143,10 @@ export default function AdminSettingsPage() {
           </div>
         </div>
 
-        {/* Security */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
-          <h2 className="font-bold text-gray-900 mb-6">Security</h2>
-          <div>
-            <label className="text-[10px] font-bold uppercase tracking-[0.3em] text-gray-400 block mb-2">Admin Password</label>
-            <input type="text" value={settings.adminPassword} onChange={e => setSettings({ ...settings, adminPassword: e.target.value })}
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all" />
-            <p className="text-xs text-gray-400 mt-1">Change the admin login password</p>
-          </div>
-        </div>
-
-        <button type="submit" className={`flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-sm transition-all shadow-sm ${saved ? 'bg-green-500 text-white' : 'bg-amber-500 hover:bg-amber-600 text-white'}`}>
-          {saved ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />}
-          {saved ? 'Settings Saved!' : 'Save Settings'}
+        <button type="submit" disabled={saving}
+          className={`flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-sm transition-all shadow-sm ${saved ? 'bg-green-500 text-white' : 'bg-amber-500 hover:bg-amber-600 text-white'} disabled:opacity-50`}>
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : saved ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+          {saved ? 'Settings Saved!' : saving ? 'Saving...' : 'Save Settings'}
         </button>
       </form>
     </div>

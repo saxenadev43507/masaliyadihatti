@@ -12,7 +12,6 @@ interface AuthContextType {
   setShowAuthModal: (show: boolean) => void;
   signUp: (email: string, password: string, name: string) => Promise<{ error: string | null }>;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
-  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -48,7 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signUp = useCallback(async (email: string, password: string, name: string) => {
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -56,6 +55,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       },
     });
     if (error) return { error: error.message };
+
+    // Create profile with role 'user'
+    if (data.user) {
+      await supabase.from('profiles').insert({
+        id: data.user.id,
+        role: 'user',
+      });
+    }
+
     return { error: null };
   }, []);
 
@@ -63,15 +71,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return { error: error.message };
     return { error: null };
-  }, []);
-
-  const signInWithGoogle = useCallback(async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/` : undefined,
-      },
-    });
   }, []);
 
   const signOut = useCallback(async () => {
@@ -84,7 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider value={{
       user, session, isLoading,
       showAuthModal, setShowAuthModal,
-      signUp, signIn, signInWithGoogle, signOut
+      signUp, signIn, signOut
     }}>
       {children}
     </AuthContext.Provider>
@@ -97,4 +96,15 @@ export function useAuth() {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
+}
+
+// Helper: check if a user is admin
+export async function checkIsAdmin(userId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', userId)
+    .single();
+  if (error || !data) return false;
+  return data.role === 'admin';
 }
