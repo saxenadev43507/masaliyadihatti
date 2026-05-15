@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, ChevronLeft, ChevronRight, Star } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, Star, ShieldCheck } from "lucide-react";
 
 interface Slide {
   brand: string;
@@ -21,6 +21,7 @@ interface Slide {
   badgeBg: string;
   overlay?: string;
   imageClass?: string;
+  trustBadge?: string;
 }
 
 const slides: Slide[] = [
@@ -34,12 +35,13 @@ const slides: Slide[] = [
     cta: "Explore Noori",
     image: "/Banner%20images/noorii.png",
     bgMode: "split",
-    bgFrom: "#0a0a0a",
-    bgTo: "#1a1a1a",
+    bgFrom: "#1c0505",
+    bgTo: "#2d0a0a",
     accentColor: "#D4AF37",
     textColor: "text-white",
     descColor: "text-white/70",
     badgeBg: "bg-accent/20 border-accent/40 text-accent",
+    trustBadge: "Over 95 Years of Heritage",
   },
   {
     brand: "Nawaabs Secret",
@@ -57,7 +59,8 @@ const slides: Slide[] = [
     textColor: "text-white",
     descColor: "text-white/80",
     badgeBg: "bg-orange-500/20 border-orange-500/40 text-orange-400",
-    overlay: "from-black via-black/60 to-transparent",
+    overlay: "from-black via-black/70 to-transparent",
+    trustBadge: "Authentic Street Flavours",
   },
   {
     brand: "Shan e Delhi",
@@ -71,29 +74,32 @@ const slides: Slide[] = [
     bgMode: "fullbleed",
     bgFrom: "#0f1410",
     bgTo: "#1a241c",
-    accentColor: "#c0a080",
+    accentColor: "#c8a882",
     textColor: "text-white",
     descColor: "text-white/75",
     badgeBg: "bg-stone-500/20 border-stone-500/40 text-stone-300",
-    overlay: "from-[#0f1410] via-[#0f1410]/70 to-transparent",
+    overlay: "from-[#0f1410] via-[#0f1410]/75 to-transparent",
+    trustBadge: "Old Delhi's Finest Recipes",
   },
   {
     brand: "Star Spices",
-    tagline: "Best Tastes Blended Together",
+    tagline: "Heritage and Purity Blended Together",
     title: "Every Blend,",
     titleAccent: "Perfected",
     description:
-      "From Pav Bhaji to Biryani Pulav — Star Spices offers a complete range of laboratory-tested, ISO-certified masalas trusted across the globe.",
+      "A complete range of laboratory-tested, ISO-certified professional blends trusted across the globe.",
     cta: "Shop Star Spices",
-    image: "/Banner%20images/starmasale-removebg-preview.png",
-    bgMode: "split",
+    // This is a verified, highly stable Unsplash URL
+    image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=1600&q=80", 
+    bgMode: "fullbleed", 
     bgFrom: "#0a121c",
     bgTo: "#121d2b",
     accentColor: "#f1c40f",
     textColor: "text-white",
-    descColor: "text-white/70",
+    descColor: "text-white/80",
     badgeBg: "bg-blue-500/20 border-blue-500/40 text-blue-300",
-    imageClass: "max-h-[550px] w-[700px] max-w-none object-contain translate-y-[10%]",
+    overlay: "from-[#0a121c] via-[#0a121c]/80 to-transparent",
+    trustBadge: "ISO Certified Quality",
   },
   {
     brand: "Roopak",
@@ -111,6 +117,7 @@ const slides: Slide[] = [
     textColor: "text-white",
     descColor: "text-white/70",
     badgeBg: "bg-cyan-500/20 border-cyan-500/40 text-cyan-300",
+    trustBadge: "60+ Years of Trust",
   },
 ];
 
@@ -119,32 +126,54 @@ const SLIDE_DURATION = 6000;
 export default function Hero() {
   const [current, setCurrent] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const progressInterval = useRef<NodeJS.Timeout | null>(null);
 
-  const next = useCallback(() => setCurrent((prev) => (prev + 1) % slides.length), []);
-  const prev = useCallback(() => setCurrent((prev) => (prev - 1 + slides.length) % slides.length), []);
+  const next = useCallback(() => {
+    setCurrent((prev) => (prev + 1) % slides.length);
+    setProgress(0);
+  }, []);
+
+  const prev = useCallback(() => {
+    setCurrent((prev) => (prev - 1 + slides.length) % slides.length);
+    setProgress(0);
+  }, []);
 
   useEffect(() => {
+    if (progressInterval.current) clearInterval(progressInterval.current);
     if (isHovered) return;
-    const timer = setInterval(next, SLIDE_DURATION);
-    return () => clearInterval(timer);
-  }, [next, isHovered]);
+    setProgress(0);
+    const tick = 50;
+    progressInterval.current = setInterval(() => {
+      setProgress((p) => {
+        if (p >= 100) {
+          next();
+          return 0;
+        }
+        return p + (tick / SLIDE_DURATION) * 100;
+      });
+    }, tick);
+    return () => {
+      if (progressInterval.current) clearInterval(progressInterval.current);
+    };
+  }, [next, isHovered, current]);
 
   const slide = slides[current];
 
   return (
-    <section 
-      className="relative h-[400px] sm:h-[480px] lg:h-[550px] w-full overflow-hidden flex flex-col bg-black"
+    <section
+      className="relative h-[440px] sm:h-[500px] lg:h-[580px] w-full overflow-hidden flex flex-col bg-black"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* ─── DYNAMIC BACKGROUND LAYER ─── */}
+      {/* ─── DYNAMIC BACKGROUND ─── */}
       <AnimatePresence mode="wait">
         <motion.div
           key={`bg-${current}`}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          initial={{ opacity: 0, scale: 1.03 }}
+          animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.9 }}
           className="absolute inset-0"
         >
           {slide.bgMode === "fullbleed" ? (
@@ -154,83 +183,142 @@ export default function Hero() {
                 className="w-full h-full object-cover"
                 alt={slide.brand}
               />
-              <div className={`absolute inset-0 bg-gradient-to-r ${slide.overlay}`} />
+              <div
+                className={`absolute inset-0 bg-gradient-to-r ${slide.overlay}`}
+              />
             </div>
           ) : (
-            <div 
+            <div
               className="w-full h-full"
-              style={{ background: `linear-gradient(135deg, ${slide.bgFrom} 0%, ${slide.bgTo} 100%)` }}
+              style={{
+                background: `linear-gradient(135deg, ${slide.bgFrom} 0%, ${slide.bgTo} 100%)`,
+              }}
             />
           )}
         </motion.div>
       </AnimatePresence>
 
-      {/* Subtle Texture Overlay */}
-      <div className="absolute inset-0 opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.2) 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
+      {/* Dot texture overlay */}
+      <div
+        className="absolute inset-0 opacity-[0.04] pointer-events-none"
+        style={{
+          backgroundImage:
+            "radial-gradient(rgba(255,255,255,0.3) 1px, transparent 1px)",
+          backgroundSize: "28px 28px",
+        }}
+      />
 
-      {/* ─── STRICT UNIFORM CONTENT CONTAINER ─── */}
+      {/* ─── CONTENT ─── */}
       <div className="relative z-20 h-full max-w-7xl mx-auto px-6 lg:px-12 w-full">
-        {/* TEXT CONTENT - ABSOLUTELY POSITIONED FOR STABILITY */}
-        <div className="absolute top-1/2 -translate-y-1/2 left-6 lg:left-12 w-[85%] sm:w-[60%] lg:w-[45%] z-30">
+        {/* TEXT */}
+        <div className="absolute top-1/2 -translate-y-1/2 left-6 lg:left-12 w-[88%] sm:w-[62%] lg:w-[46%] z-30">
           <AnimatePresence mode="wait">
             <motion.div
               key={`text-${current}`}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -10 }}
-              transition={{ duration: 0.4 }}
+              initial={{ opacity: 0, x: -28, filter: "blur(4px)" }}
+              animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+              exit={{ opacity: 0, x: -15 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
               className={`${slide.textColor} flex flex-col items-start text-left`}
             >
-              <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border ${slide.badgeBg} text-[9px] font-black uppercase tracking-[0.2em] mb-4 shadow-sm backdrop-blur-md`}>
+              {/* Trust signal */}
+              {slide.trustBadge && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15 }}
+                  className="flex items-center gap-2 mb-3"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-accent" />
+                  <span
+                    className="text-[9px] font-black uppercase tracking-[0.25em]"
+                    style={{ color: slide.accentColor }}
+                  >
+                    {slide.trustBadge}
+                  </span>
+                </motion.div>
+              )}
+
+              {/* Badge */}
+              <motion.span
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border ${slide.badgeBg} text-[9px] font-black uppercase tracking-[0.2em] mb-5 shadow-sm backdrop-blur-md`}
+              >
                 <Star className="w-3 h-3 fill-current" />
                 {slide.tagline}
-              </span>
+              </motion.span>
 
-              <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-serif font-black mb-2 tracking-tight leading-[1.1]">
+              {/* Headline */}
+              <motion.h1
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.28 }}
+                className="text-3xl sm:text-4xl lg:text-5xl xl:text-[3.25rem] font-serif font-black mb-3 tracking-tight leading-[1.08]"
+              >
                 {slide.title} <br />
-                <span style={{ color: slide.accentColor }} className="italic drop-shadow-md">{slide.titleAccent}</span>
-              </h1>
+                <span
+                  style={{ color: slide.accentColor }}
+                  className="italic drop-shadow-lg"
+                >
+                  {slide.titleAccent}
+                </span>
+              </motion.h1>
 
-              <p className={`${slide.descColor} text-[10px] sm:text-xs lg:text-sm mb-4 max-w-sm leading-relaxed font-serif italic`}>
+              {/* Description */}
+              <motion.p
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.36 }}
+                className={`${slide.descColor} text-xs sm:text-sm lg:text-[0.92rem] mb-7 max-w-[420px] leading-relaxed font-serif italic`}
+              >
                 {slide.description}
-              </p>
+              </motion.p>
 
-              <button 
-                className="group flex items-center gap-2 text-white font-bold text-[10px] lg:text-xs uppercase tracking-widest py-3 px-8 rounded-lg transition-all duration-300 hover:scale-105 shadow-xl"
-                style={{ backgroundColor: slide.accentColor }}
+              {/* CTA */}
+              <motion.button
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.44 }}
+                className="group flex items-center gap-2.5 text-white font-black text-[11px] lg:text-xs uppercase tracking-widest py-3.5 px-9 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl shadow-xl"
+                style={{
+                  backgroundColor: slide.accentColor,
+                  boxShadow: `0 12px 36px -8px ${slide.accentColor}60`,
+                }}
               >
                 {slide.cta}
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1.5" />
-              </button>
+              </motion.button>
             </motion.div>
           </AnimatePresence>
         </div>
 
-        {/* IMAGE CONTENT - FOR SPLIT MODE */}
+        {/* IMAGE (split mode only) */}
         <div className="absolute right-0 top-0 bottom-0 w-1/2 hidden lg:flex items-center justify-center z-20 overflow-hidden">
           {slide.bgMode === "split" && (
             <AnimatePresence mode="wait">
               <motion.div
                 key={`img-${current}`}
-                initial={{ opacity: 0, scale: 0.95, x: 20 }}
+                initial={{ opacity: 0, scale: 0.92, x: 24 }}
                 animate={{ opacity: 1, scale: 1, x: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.5 }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
                 className="relative"
               >
-                <div 
-                  className="absolute inset-0 w-[400px] h-[400px] blur-[100px] opacity-20 mx-auto"
+                <div
+                  className="absolute inset-0 w-[420px] h-[420px] blur-[120px] opacity-25 mx-auto"
                   style={{ backgroundColor: slide.accentColor }}
                 />
                 <img
                   src={slide.image}
                   alt={slide.brand}
                   className={`relative z-10 ${
-                    slide.imageClass 
-                      ? slide.imageClass 
-                      : "max-h-[450px] w-auto object-contain transition-transform duration-700 hover:scale-105"
+                    slide.imageClass
+                      ? slide.imageClass
+                      : "max-h-[480px] w-auto object-contain"
                   }`}
-                  style={{ filter: "drop-shadow(0 25px 50px rgba(0,0,0,0.4))" }}
+                  style={{ filter: "drop-shadow(0 30px 60px rgba(0,0,0,0.45))" }}
                 />
               </motion.div>
             </AnimatePresence>
@@ -238,34 +326,52 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* ─── ARROW CONTROLS (Positioned Higher) ─── */}
-      <div className="absolute bottom-4 right-6 lg:right-12 z-30 flex gap-2">
-        <button
-          onClick={prev}
-          className="w-9 h-9 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-lg hover:bg-white/20 transition-all duration-300"
-        >
-          <ChevronLeft className="w-5 h-5" />
-        </button>
-        <button
-          onClick={next}
-          className="w-9 h-9 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-lg hover:bg-white/20 transition-all duration-300"
-        >
-          <ChevronRight className="w-5 h-5" />
-        </button>
-      </div>
+      {/* ─── BOTTOM BAR: Dots + Progress + Arrows ─── */}
+      <div className="absolute bottom-0 left-0 right-0 z-30 flex items-center justify-between px-6 lg:px-12 pb-5">
+        {/* Slide indicators */}
+        <div className="flex items-center gap-3">
+          {slides.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => { setCurrent(i); setProgress(0); }}
+              className="relative h-1 rounded-full overflow-hidden transition-all duration-500"
+              style={{ width: current === i ? 44 : 14 }}
+            >
+              <span
+                className="absolute inset-0 rounded-full opacity-30"
+                style={{ backgroundColor: slide.accentColor }}
+              />
+              {current === i && (
+                <motion.span
+                  className="absolute top-0 left-0 h-full rounded-full"
+                  style={{
+                    backgroundColor: slide.accentColor,
+                    width: `${progress}%`,
+                  }}
+                />
+              )}
+            </button>
+          ))}
+        </div>
 
-      {/* ─── DOT INDICATORS (Positioned Higher) ─── */}
-      <div className="absolute bottom-4 left-6 lg:left-12 z-30 flex gap-2">
-        {slides.map((_, i) => (
+        {/* Counter + Arrows */}
+        <div className="flex items-center gap-3">
+          <span className="text-white/50 text-[10px] font-bold tracking-widest hidden sm:block">
+            {String(current + 1).padStart(2, "0")} / {String(slides.length).padStart(2, "0")}
+          </span>
           <button
-            key={i}
-            onClick={() => setCurrent(i)}
-            className={`h-1.5 transition-all duration-500 rounded-full ${
-              current === i ? "w-10" : "w-3 bg-white/30 hover:bg-white/50"
-            }`}
-            style={{ backgroundColor: current === i ? slide.accentColor : undefined }}
-          />
-        ))}
+            onClick={prev}
+            className="w-9 h-9 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/25 transition-all"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <button
+            onClick={next}
+            className="w-9 h-9 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/25 transition-all"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </div>
       </div>
     </section>
   );

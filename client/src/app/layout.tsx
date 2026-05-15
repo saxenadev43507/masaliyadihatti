@@ -17,8 +17,9 @@ const openSans = Open_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Masaliya Di Hatti | Premium Spices Since 1928",
-  description: "Authentic Indian spices and heritage blends.",
+  title: "Masaliya Di Hatti | Luxury Of Spices Since 1928",
+  description:
+    "Masaliya Di Hatti – Authentic Indian spices, heritage blends, and premium masale. Free delivery on orders above $99 across Australia.",
 };
 
 export default function RootLayout({
@@ -31,7 +32,7 @@ export default function RootLayout({
       lang="en"
       className={`${playfair.variable} ${openSans.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col font-sans bg-white text-gray-900">
+      <body className="min-h-full flex flex-col font-sans bg-background text-foreground">
         <AuthProvider>
           <CartProvider>
             <LayoutShell>{children}</LayoutShell>
@@ -42,4 +43,3 @@ export default function RootLayout({
     </html>
   );
 }
-

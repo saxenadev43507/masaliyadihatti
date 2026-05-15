@@ -17,7 +17,7 @@ const processSteps = [
     title: "Premium Ingredients",
     desc: "Hand-picked from the most fertile spice belts of India.",
     icon: <Leaf className="w-6 h-6" />,
-    pos: "top-[15%] left-[50%] -translate-x-1/2 -translate-y-1/2",
+    pos: "top-[8%] left-[50%] -translate-x-1/2 -translate-y-1/2", // Adjusted
     mobileOrder: 1,
   },
   {
@@ -25,7 +25,7 @@ const processSteps = [
     title: "Perfect Roasting",
     desc: "Slow-roasted at precise temperatures to unlock essential oils.",
     icon: <Flame className="w-6 h-6" />,
-    pos: "top-[20%] right-[5%]",
+    pos: "top-[22%] right-[5%]", // Adjusted
     mobileOrder: 2,
   },
   {
@@ -33,7 +33,7 @@ const processSteps = [
     title: "Fine Grinding",
     desc: "Traditional stone-grinding that preserves the natural heat.",
     icon: <Settings className="w-6 h-6" />,
-    pos: "bottom-[20%] right-[5%]",
+    pos: "bottom-[22%] right-[5%]", // Adjusted
     mobileOrder: 3,
   },
   {
@@ -41,7 +41,7 @@ const processSteps = [
     title: "Rich Aroma",
     desc: "Cold-processed to ensure the scent stays locked until it hits your pan.",
     icon: <Wind className="w-6 h-6" />,
-    pos: "bottom-[15%] left-[50%] -translate-x-1/2 translate-y-1/2",
+    pos: "bottom-[8%] left-[50%] -translate-x-1/2 translate-y-1/2", // Adjusted
     mobileOrder: 4,
   },
   {
@@ -49,7 +49,7 @@ const processSteps = [
     title: "Hygienic Packaging",
     desc: "Multi-layer vacuum sealing for farm-fresh flavor.",
     icon: <ShieldCheck className="w-6 h-6" />,
-    pos: "bottom-[20%] left-[5%]",
+    pos: "bottom-[22%] left-[5%]", // Adjusted
     mobileOrder: 5,
   },
   {
@@ -57,7 +57,7 @@ const processSteps = [
     title: "Wide Variety",
     desc: "From daily staples to rare royal kitchen blends.",
     icon: <LayoutGrid className="w-6 h-6" />,
-    pos: "top-[20%] left-[5%]",
+    pos: "top-[22%] left-[5%]", // Adjusted
     mobileOrder: 6,
   },
 ];
@@ -94,7 +94,8 @@ export default function ProcessStory() {
   }, []);
 
   return (
-    <section className="py-28 bg-white text-primary relative overflow-hidden">
+    // Changed py-28 to py-12 for standard website spacing
+    <section className="py-12 bg-white text-primary relative overflow-hidden">
       {/* Background Cinematic Effects */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-b from-gray-50 via-transparent to-gray-50 opacity-40"></div>
@@ -143,15 +144,15 @@ export default function ProcessStory() {
           </motion.div>
         </div>
 
-        {/* Desktop Circular Layout */}
-        <div className="hidden lg:block relative h-[750px] w-full">
-          {/* Center Image */}
+        {/* Desktop Circular Layout - Reduced height to 700px */}
+        <div className="hidden lg:block relative h-[700px] w-full">
+          {/* Center Image - Shrunk to 360px to stop card overlap */}
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 1 }}
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] z-20"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[360px] h-[360px] z-20"
           >
             <div className="relative w-full h-full rounded-full overflow-hidden border-4 border-white shadow-[0_0_80px_rgba(212,175,55,0.1)] group">
               <img
