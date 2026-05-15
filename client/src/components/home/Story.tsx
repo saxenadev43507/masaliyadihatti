@@ -66,7 +66,7 @@ export default function Story() {
               <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop" className="w-12 h-12 rounded-full border-2 border-white shadow-md grayscale" alt="Master Blender" />
             </div>
             <div>
-              <p className="font-bold text-gray-900 text-sm">Crafted by Ranjit</p>
+              <p className="font-bold text-gray-900 text-sm">Crafted by Sidharth</p>
               <p className="text-xs text-gray-500">Over 90 years of mastery.</p>
             </div>
           </div>
