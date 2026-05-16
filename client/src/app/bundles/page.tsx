@@ -89,7 +89,7 @@ function BundlesContent() {
     return bundleDeals.filter(b => b.slug === activeBundle);
   }, [activeBundle]);
 
-  const handleAddToCart = (p: { id: number; title: string; brand: string; price: string; image: string }) => {
+  const handleAddToCart = (p: { id: number; title: string; brand: string; price: string; image: string; weight?: number }) => {
     if (!user) { setShowAuthModal(true); return; }
     addToCart(p);
   };
@@ -189,7 +189,7 @@ function BundlesContent() {
                       <div className="text-4xl font-black text-primary">{bundle.bundlePrice}</div>
                       <div className="text-sm font-bold text-accent">Save {bundle.savings}</div>
                     </div>
-                    <button onClick={() => { if (!user) { setShowAuthModal(true); return; } const mp = allProducts.find(p => bundle.items.includes(p.title)); if (mp) addToCart({ id: mp.id, title: bundle.name + " Bundle", brand: "Masaliya", price: bundle.bundlePrice + " AUD", image: mp.image }); }}
+                    <button onClick={() => { if (!user) { setShowAuthModal(true); return; } const mp = allProducts.find(p => bundle.items.includes(p.title)); if (mp) addToCart({ id: mp.id, title: bundle.name + " Bundle", brand: "Masaliya", price: bundle.bundlePrice + " AUD", image: mp.image, weight: bundle.items.length * 0.1 }); }}
                       className="flex items-center gap-3 bg-primary hover:bg-accent text-white px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all duration-300 shadow-lg hover:shadow-xl whitespace-nowrap">
                       <ShoppingCart className="w-4 h-4" /> Add Bundle
                     </button>
@@ -233,7 +233,7 @@ function BundlesContent() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {featuredProducts.map(p => (
             <Link key={p.id} href={`/product/${p.id}`}>
-              <ProductCard title={p.title} brand={p.brand} price={p.price} rating={p.rating} tags={p.tags} productImage={p.image} overlayText={p.desc} onAddToCart={() => handleAddToCart({ id: p.id, title: p.title, brand: p.brand, price: p.price, image: p.image })} />
+              <ProductCard title={p.title} brand={p.brand} price={p.price} rating={p.rating} tags={p.tags} productImage={p.image} overlayText={p.desc} onAddToCart={() => handleAddToCart({ id: p.id, title: p.title, brand: p.brand, price: p.price, image: p.image, weight: p.weight })} />
             </Link>
           ))}
         </div>

@@ -37,7 +37,7 @@ export default function CategoriesPage() {
   const { addToCart } = useCart();
   const { user, setShowAuthModal } = useAuth();
 
-  const handleAddToCart = (p: { id: number; title: string; brand: string; price: string; image: string }) => {
+  const handleAddToCart = (p: { id: number; title: string; brand: string; price: string; image: string; weight?: number }) => {
     if (!user) { setShowAuthModal(true); return; }
     addToCart(p);
   };
@@ -147,7 +147,7 @@ export default function CategoriesPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {bestSellers.map(p => (
             <Link key={p.id} href={`/product/${p.id}`}>
-              <ProductCard title={p.title} brand={p.brand} price={p.price} rating={p.rating} tags={p.tags} productImage={p.image} overlayText={p.desc} onAddToCart={() => handleAddToCart({ id: p.id, title: p.title, brand: p.brand, price: p.price, image: p.image })} />
+              <ProductCard title={p.title} brand={p.brand} price={p.price} rating={p.rating} tags={p.tags} productImage={p.image} overlayText={p.desc} onAddToCart={() => handleAddToCart({ id: p.id, title: p.title, brand: p.brand, price: p.price, image: p.image, weight: p.weight })} />
             </Link>
           ))}
         </div>

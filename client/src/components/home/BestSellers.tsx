@@ -74,7 +74,7 @@ export default function BestSellers() {
 
   const handleAdd = (p: typeof products[0], i: number) => {
     if (!user) { setShowAuthModal(true); return; }
-    addToCart({ id: i + 1, title: p.title, brand: p.brand, price: p.price, image: p.image });
+    addToCart({ id: i + 1, title: p.title, brand: p.brand, price: p.price, image: p.image, weight: 0.1 });
   };
 
   return (

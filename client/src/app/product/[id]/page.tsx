@@ -60,7 +60,7 @@ export default function ProductDetailPage() {
       return;
     }
     for (let i = 0; i < quantity; i++) {
-      addToCart({ id: product.id, title: product.title, brand: product.brand, price: product.price, image: product.image });
+      addToCart({ id: product.id, title: product.title, brand: product.brand, price: product.price, image: product.image, weight: (product as Record<string, unknown>).weight as number || 0.1 });
     }
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2000);
@@ -140,7 +140,7 @@ export default function ProductDetailPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {relatedProducts.map(p => (
               <Link key={p.id} href={`/product/${p.id}`}>
-                <ProductCard title={p.title} brand={p.brand} price={p.price} rating={p.rating} tags={p.tags} productImage={p.image} overlayText={p.desc} onAddToCart={() => { if (!user) { setShowAuthModal(true); return; } addToCart({ id: p.id, title: p.title, brand: p.brand, price: p.price, image: p.image }); }} />
+                <ProductCard title={p.title} brand={p.brand} price={p.price} rating={p.rating} tags={p.tags} productImage={p.image} overlayText={p.desc} onAddToCart={() => { if (!user) { setShowAuthModal(true); return; } addToCart({ id: p.id, title: p.title, brand: p.brand, price: p.price, image: p.image, weight: (p as Record<string, unknown>).weight as number || 0.1 }); }} />
               </Link>
             ))}
           </div>

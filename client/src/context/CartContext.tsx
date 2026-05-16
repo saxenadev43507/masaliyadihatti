@@ -9,6 +9,7 @@ export interface CartItem {
   price: string;
   image: string;
   quantity: number;
+  weight?: number; // weight in kg per unit (defaults to 0.1 if not set)
 }
 
 interface CartContextType {
@@ -19,6 +20,7 @@ interface CartContextType {
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;
+  totalWeight: number; // total weight in kg
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -77,8 +79,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return sum + price * i.quantity;
   }, 0);
 
+  // Calculate total weight of all items in cart (kg)
+  const totalWeight = items.reduce((sum, i) => {
+    return sum + (i.weight || 0.1) * i.quantity; // fallback to 0.1kg if weight not set
+  }, 0);
+
   return (
-    <CartContext.Provider value={{ items, addToCart, removeFromCart, updateQuantity, clearCart, totalItems, totalPrice }}>
+    <CartContext.Provider value={{ items, addToCart, removeFromCart, updateQuantity, clearCart, totalItems, totalPrice, totalWeight }}>
       {children}
     </CartContext.Provider>
   );
