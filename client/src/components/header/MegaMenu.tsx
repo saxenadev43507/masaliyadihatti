@@ -20,14 +20,15 @@ import {
   Sparkles,
 } from "lucide-react";
 
+// ADDED: Smart positioning so menus on the edges don't get cut off the screen!
 const menuItems = [
   { name: "Home", href: "/" },
-  { name: "Shop", href: "/shop", hasMegaMenu: true, type: "shop" },
-  { name: "Categories", href: "/categories", hasMegaMenu: true, type: "categories" },
-  { name: "Brands", href: "/brands", hasMegaMenu: true, type: "brands" },
-  { name: "Bundles", href: "/bundles", hasMegaMenu: true, type: "bundles" },
-  { name: "Recipes", href: "/recipes", hasMegaMenu: true, type: "recipes" },
-  { name: "Wholesale", href: "/wholesale", hasMegaMenu: true, type: "wholesale" },
+  { name: "Shop", href: "/shop", hasMegaMenu: true, type: "shop", position: "left-0" },
+  { name: "Categories", href: "/categories", hasMegaMenu: true, type: "categories", position: "left-0" },
+  { name: "Brands", href: "/brands", hasMegaMenu: true, type: "brands", position: "left-1/2 -translate-x-1/2" },
+  { name: "Bundles", href: "/bundles", hasMegaMenu: true, type: "bundles", position: "left-1/2 -translate-x-1/2" },
+  { name: "Recipes", href: "/recipes", hasMegaMenu: true, type: "recipes", position: "right-0" },
+  { name: "Wholesale", href: "/wholesale", hasMegaMenu: true, type: "wholesale", position: "right-0" },
   { name: "About", href: "/about" },
   { name: "Contact", href: "/contact" },
 ];
@@ -428,8 +429,9 @@ export default function MegaMenu() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 5 }}
                 transition={{ duration: 0.2 }}
-                // Extended width to 850px to accommodate the new beautiful cards!
-                className="absolute top-full left-1/2 -translate-x-1/2 w-[850px] bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-primary/10 overflow-hidden z-50 mt-1"
+                onClick={() => setActiveTab(null)} // ADDED: Closes menu on click
+                // ADDED: bg-white to prevent pink tint AND dynamic position classes to prevent cutoffs
+                className={`absolute top-full max-w-[95vw] lg:w-[850px] bg-white rounded-3xl shadow-2xl border border-primary/10 overflow-hidden z-50 mt-1 ${item.position || 'left-1/2 -translate-x-1/2'}`}
               >
                 {renderMegaMenu(item.type!)}
               </motion.div>

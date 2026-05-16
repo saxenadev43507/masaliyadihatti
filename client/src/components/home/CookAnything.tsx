@@ -117,7 +117,7 @@ export default function FeaturedRecipes() {
   };
 
   return (
-    <section className="py-16 bg-gray-50/50 overflow-hidden">
+    <section className="py-16 bg-white overflow-hidden">
       <div className="max-w-7xl mx-auto px-4">
         
         {/* Header with Navigation Controls */}

@@ -6,7 +6,7 @@ import { ArrowRight } from "lucide-react";
 
 export default function Categories() {
   return (
-    <section className="py-12 px-4 bg-background">
+    <section className="py-12 px-4 bg-white">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col items-center text-center mb-9 gap-3">
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="flex flex-col items-center">
