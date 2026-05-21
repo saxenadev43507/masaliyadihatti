@@ -71,7 +71,7 @@ function ShopContent() {
         brand: p.brand,
         category: p.category,
         price: p.price,
-        weight: (p as Record<string, unknown>).weight as number || 0.1,
+        weight: (p as unknown as Record<string, unknown>).weight as number || 0.1,
         rating: p.rating,
         tags: p.tags || [],
         image: p.image_url || '',
@@ -238,7 +238,7 @@ function ShopContent() {
                   tags={product.tags}
                   productImage={product.image}
                   overlayText={product.desc}
-                  onAddToCart={() => handleAddToCart({ id: product.id, title: product.title, brand: product.brand, price: product.price, image: product.image, weight: (product as Record<string, unknown>).weight as number || 0.1 })}
+                  onAddToCart={() => handleAddToCart({ id: product.id, title: product.title, brand: product.brand, price: product.price, image: product.image, weight: (product as unknown as Record<string, unknown>).weight as number || 0.1 })}
                 />
               </motion.div>
             ))}
