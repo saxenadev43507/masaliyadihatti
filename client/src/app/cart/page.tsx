@@ -3,8 +3,9 @@
 import React, { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, ShieldCheck, Truck, MapPin, Package, Loader2, Weight, AlertCircle } from 'lucide-react';
+import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, ShieldCheck, Truck, MapPin, Package, Loader2, Weight, AlertCircle, CreditCard } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 
 interface ShippingOption {
   code: string;
@@ -15,6 +16,7 @@ interface ShippingOption {
 
 export default function CartPage() {
   const { items, removeFromCart, updateQuantity, clearCart, totalItems, totalPrice, totalWeight } = useCart();
+  const { user, setShowAuthModal } = useAuth();
 
   // Shipping state
   const [postcode, setPostcode] = useState('');
@@ -23,9 +25,68 @@ export default function CartPage() {
   const [shippingLoading, setShippingLoading] = useState(false);
   const [shippingError, setShippingError] = useState('');
   const [shippingCalculated, setShippingCalculated] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutError, setCheckoutError] = useState('');
 
   const shippingCost = selectedShipping ? selectedShipping.price : 0;
   const grandTotal = totalPrice + shippingCost;
+
+  // Handle Stripe Checkout
+  const handleCheckout = useCallback(async () => {
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+
+    if (!shippingCalculated || !selectedShipping) {
+      setCheckoutError('Please calculate shipping first');
+      return;
+    }
+
+    setCheckoutLoading(true);
+    setCheckoutError('');
+
+    try {
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: items.map(item => ({
+            id: item.id,
+            title: item.title,
+            brand: item.brand,
+            price: item.price,
+            quantity: item.quantity,
+            weight: item.weight || 0.1,
+            image: item.image,
+          })),
+          shippingCost: selectedShipping.price,
+          shippingService: selectedShipping.name,
+          shippingPostcode: postcode,
+          customerEmail: user.email,
+          subtotal: totalPrice,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setCheckoutError(data.error || 'Failed to start checkout. Please try again.');
+        return;
+      }
+
+      // Redirect to Stripe Checkout
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        setCheckoutError('Failed to get checkout URL. Please try again.');
+      }
+    } catch {
+      setCheckoutError('Network error. Please check your connection and try again.');
+    } finally {
+      setCheckoutLoading(false);
+    }
+  }, [user, setShowAuthModal, shippingCalculated, selectedShipping, items, postcode, totalPrice]);
 
   const calculateShipping = useCallback(async () => {
     if (!postcode || !/^\d{4}$/.test(postcode)) {
@@ -297,16 +358,41 @@ export default function CartPage() {
               </div>
 
               <button
-                disabled={!shippingCalculated || !selectedShipping}
+                onClick={handleCheckout}
+                disabled={!shippingCalculated || !selectedShipping || checkoutLoading}
                 className="w-full bg-primary text-white py-4 rounded-xl flex items-center justify-center gap-3 hover:bg-accent transition-all duration-300 shadow-lg active:scale-[0.98] mb-4 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary"
               >
-                <span className="text-sm font-black uppercase tracking-widest">Proceed to Checkout</span>
-                <ArrowRight className="w-4 h-4" />
+                {checkoutLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span className="text-sm font-black uppercase tracking-widest">Processing...</span>
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="w-4 h-4" />
+                    <span className="text-sm font-black uppercase tracking-widest">Pay with Stripe</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
               </button>
+
+              {/* Checkout error */}
+              {checkoutError && (
+                <div className="flex items-start gap-2 bg-red-50 border border-red-100 rounded-xl p-3 mb-3">
+                  <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-red-500 font-medium">{checkoutError}</p>
+                </div>
+              )}
 
               {!shippingCalculated && (
                 <p className="text-center text-[10px] text-accent font-bold mb-3">
                   Please calculate shipping before checkout
+                </p>
+              )}
+
+              {shippingCalculated && !user && (
+                <p className="text-center text-[10px] text-accent font-bold mb-3">
+                  Please sign in to proceed with checkout
                 </p>
               )}
 
