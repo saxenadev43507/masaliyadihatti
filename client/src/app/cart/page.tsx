@@ -370,7 +370,7 @@ export default function CartPage() {
                 ) : (
                   <>
                     <CreditCard className="w-4 h-4" />
-                    <span className="text-sm font-black uppercase tracking-widest">Pay with Stripe</span>
+                    <span className="text-sm font-black uppercase tracking-widest">Proceed to Checkout</span>
                     <ArrowRight className="w-4 h-4" />
                   </>
                 )}

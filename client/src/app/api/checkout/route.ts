@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { stripe } from '@/lib/stripe';
+import { getShopifyProducts, createShopifyCheckout } from '@/lib/shopify';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { items, shippingCost, shippingService, shippingPostcode, customerEmail, subtotal } = body;
+    const { items, shippingCost, shippingService, customerEmail } = body;
 
     // Validate required fields
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -15,96 +15,75 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Please calculate shipping before checkout' }, { status: 400 });
     }
 
-    if (!customerEmail) {
-      return NextResponse.json({ error: 'Please sign in to proceed with checkout' }, { status: 400 });
+    // Retrieve active Shopify products list to map/resolve variant IDs if missing
+    let shopifyProducts: any[] = [];
+    try {
+      shopifyProducts = await getShopifyProducts();
+    } catch (err) {
+      console.error('[Shopify API] Failed to pre-fetch products for checkout resolution:', err);
     }
 
-    // Build line items for Stripe Checkout
-    const lineItems: {
-      price_data: {
-        currency: string;
-        product_data: {
-          name: string;
-          description?: string;
-          images?: string[];
-        };
-        unit_amount: number;
-      };
-      quantity: number;
-    }[] = items.map((item: { title: string; brand: string; price: string; quantity: number; image?: string; weight?: number }) => {
-      // Parse price from string like "$6.99 AUD"
-      const priceNum = parseFloat(item.price.replace(/[^0-9.]/g, ''));
-      const unitAmountCents = Math.round(priceNum * 100); // Stripe uses cents
+    // Build the line items list with resolved variant IDs
+    const lineItems: { variantId: string; quantity: number }[] = [];
 
-      return {
-        price_data: {
-          currency: 'aud',
-          product_data: {
-            name: item.title,
-            description: `${item.brand} • ${((item.weight || 0.1) * 1000).toFixed(0)}g`,
-            ...(item.image ? { images: [item.image] } : {}),
-          },
-          unit_amount: unitAmountCents,
-        },
-        quantity: item.quantity,
-      };
-    });
+    for (const item of items) {
+      let variantId = item.variantId;
 
-    // Add shipping as a line item
-    if (shippingCost > 0) {
-      const shippingCents = Math.round(shippingCost * 100);
-      lineItems.push({
-        price_data: {
-          currency: 'aud',
-          product_data: {
-            name: `Shipping — ${shippingService || 'Australia Post'}`,
-            description: `Delivery to ${shippingPostcode || 'your address'} via Australia Post`,
-          },
-          unit_amount: shippingCents,
-        },
-        quantity: 1,
-      });
-    }
+      // Failsafe: If variantId is missing, resolve it dynamically by matching product title
+      if (!variantId && shopifyProducts.length > 0) {
+        const matched = shopifyProducts.find(
+          (sp) => sp.title.toLowerCase().trim() === item.title.toLowerCase().trim()
+        );
+        if (matched) {
+          variantId = matched.variantId;
+          console.log(`[Shopify API] Resolved missing variant ID for "${item.title}" -> ${variantId}`);
+        }
+      }
 
-    // Get the origin for redirect URLs
-    const origin = request.headers.get('origin') || 'http://localhost:3000';
+      // If we still don't have a variant ID, use a default fallback or warn
+      if (!variantId) {
+        console.warn(`[Shopify API] Could not find Shopify variant ID for product: "${item.title}". Check if seeded on Shopify.`);
+        
+        // Failsafe: Try to match any product with same vendor/brand as fallback if available
+        const brandFallback = shopifyProducts.find(
+          (sp) => sp.brand.toLowerCase() === item.brand.toLowerCase()
+        );
+        if (brandFallback) {
+          variantId = brandFallback.variantId;
+          console.log(`[Shopify API] Using brand fallback variant for "${item.title}" -> "${brandFallback.title}" (${variantId})`);
+        }
+      }
 
-    // Create Stripe Checkout Session
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: lineItems,
-      mode: 'payment',
-      customer_email: customerEmail,
-      success_url: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/checkout/cancel`,
-      metadata: {
-        items: JSON.stringify(items.map((item: { id: number; title: string; quantity: number; price: string }) => ({
-          id: item.id,
-          title: item.title,
+      if (variantId) {
+        lineItems.push({
+          variantId: variantId,
           quantity: item.quantity,
-          price: item.price,
-        }))),
-        subtotal: subtotal?.toString() || '0',
-        shippingCost: shippingCost.toString(),
-        shippingService: shippingService || '',
-        shippingPostcode: shippingPostcode || '',
-        customerEmail: customerEmail,
-      },
-    });
+        });
+      } else {
+        return NextResponse.json(
+          { error: `The product "${item.title}" is not available in Shopify yet. Please configure it in your Shopify Admin.` },
+          { status: 400 }
+        );
+      }
+    }
 
-    return NextResponse.json({ url: session.url, sessionId: session.id });
-  } catch (error) {
-    console.error('[Stripe] Checkout session error:', error);
-    
-    if (error instanceof Error && error.message.includes('API key')) {
+    console.log('[Shopify API] Creating checkout for line items:', lineItems);
+
+    // Call Shopify Storefront API to create cart & checkout session URL
+    const checkoutUrl = await createShopifyCheckout(lineItems);
+
+    if (checkoutUrl) {
+      return NextResponse.json({ url: checkoutUrl });
+    } else {
       return NextResponse.json(
-        { error: 'Stripe is not configured. Please add valid API keys.' },
+        { error: 'Failed to create Shopify checkout session. Verify your variant IDs in Shopify Admin.' },
         { status: 500 }
       );
     }
-
+  } catch (error) {
+    console.error('[Shopify Checkout] Session creation error:', error);
     return NextResponse.json(
-      { error: 'Failed to create checkout session. Please try again.' },
+      { error: 'An error occurred during checkout setup. Please try again.' },
       { status: 500 }
     );
   }

@@ -22,21 +22,43 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getProducts()
-      .then(data => {
-        if (data && data.length > 0) {
-          setAllProds(data.map(p => ({
-            id: p.id!, title: p.title, brand: p.brand, category: p.category,
-            price: p.price, rating: p.rating, tags: p.tags || [],
-            image: p.image_url || '', desc: p.description || ''
-          })));
-        }
+    import('@/lib/shopify')
+      .then(({ getShopifyProducts }) => {
+        getShopifyProducts()
+          .then(data => {
+            if (data && data.length > 0) {
+              setAllProds(data.map((p, index) => ({
+                id: index + 100, // Safe local numeric ID mapping
+                title: p.title,
+                brand: p.brand,
+                category: p.category,
+                price: p.price,
+                rating: p.rating,
+                tags: p.tags || [],
+                image: p.image,
+                desc: p.desc,
+                weight: p.weight,
+                variantId: p.variantId,
+                handle: p.handle,
+              })) as any);
+            }
+          })
+          .catch((err) => {
+            console.error('[Shopify] Error loading product details:', err);
+          })
+          .finally(() => setLoading(false));
       })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+      .catch(() => setLoading(false));
   }, []);
 
-  const product = allProds.find(p => p.id === productId);
+  const product = useMemo(() => {
+    let found = allProds.find(p => p.id === productId);
+    if (!found) {
+      // Robust fallback: look inside static products list if live list is empty or loading
+      found = allProducts.find(p => p.id === productId) as any;
+    }
+    return found;
+  }, [productId, allProds]);
 
   const relatedProducts = useMemo(() => {
     if (!product) return [];
@@ -60,7 +82,15 @@ export default function ProductDetailPage() {
       return;
     }
     for (let i = 0; i < quantity; i++) {
-      addToCart({ id: product.id, title: product.title, brand: product.brand, price: product.price, image: product.image, weight: (product as Record<string, unknown>).weight as number || 0.1 });
+      addToCart({ 
+        id: product.id, 
+        title: product.title, 
+        brand: product.brand, 
+        price: product.price, 
+        image: product.image, 
+        weight: (product as Record<string, unknown>).weight as number || 0.1,
+        variantId: (product as any).variantId
+      });
     }
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2000);
@@ -140,7 +170,7 @@ export default function ProductDetailPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {relatedProducts.map(p => (
               <Link key={p.id} href={`/product/${p.id}`}>
-                <ProductCard title={p.title} brand={p.brand} price={p.price} rating={p.rating} tags={p.tags} productImage={p.image} overlayText={p.desc} onAddToCart={() => { if (!user) { setShowAuthModal(true); return; } addToCart({ id: p.id, title: p.title, brand: p.brand, price: p.price, image: p.image, weight: (p as Record<string, unknown>).weight as number || 0.1 }); }} />
+                <ProductCard title={p.title} brand={p.brand} price={p.price} rating={p.rating} tags={p.tags} productImage={p.image} overlayText={p.desc} onAddToCart={() => { if (!user) { setShowAuthModal(true); return; } addToCart({ id: p.id, title: p.title, brand: p.brand, price: p.price, image: p.image, weight: (p as Record<string, unknown>).weight as number || 0.1, variantId: (p as any).variantId }); }} />
               </Link>
             ))}
           </div>

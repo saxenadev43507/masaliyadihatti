@@ -34,7 +34,7 @@ function ShopContent() {
   const { addToCart } = useCart();
   const { user, setShowAuthModal } = useAuth();
 
-  const handleAddToCart = (product: { id: number; title: string; brand: string; price: string; image: string; weight?: number }) => {
+  const handleAddToCart = (product: { id: number; title: string; brand: string; price: string; image: string; weight?: number; variantId?: string }) => {
     if (!user) {
       setShowAuthModal(true);
       return;
@@ -43,14 +43,35 @@ function ShopContent() {
   };
   const [dbLoaded, setDbLoaded] = useState(false);
 
-  // Fetch products from Supabase
+  // Fetch products from Shopify Storefront API
   useEffect(() => {
-    getProducts()
-      .then(data => {
-        if (data && data.length > 0) {
-          setDbProducts(data);
-        }
-        setDbLoaded(true);
+    import('@/lib/shopify')
+      .then(({ getShopifyProducts }) => {
+        getShopifyProducts()
+          .then(data => {
+            if (data && data.length > 0) {
+              const mapped = data.map((p, index) => ({
+                id: index + 100, // Safe local numeric ID mapping
+                title: p.title,
+                brand: p.brand,
+                category: p.category,
+                price: p.price,
+                rating: p.rating,
+                tags: p.tags || [],
+                image_url: p.image,
+                description: p.desc,
+                weight: p.weight,
+                variantId: p.variantId,
+                handle: p.handle,
+              }));
+              setDbProducts(mapped as any);
+            }
+            setDbLoaded(true);
+          })
+          .catch((err) => {
+            console.error('[Shopify] Error fetching products:', err);
+            setDbLoaded(true);
+          });
       })
       .catch(() => setDbLoaded(true));
   }, []);
@@ -62,7 +83,7 @@ function ShopContent() {
     }
   }, [searchParams]);
 
-  // Use DB products if available, otherwise static
+  // Use DB/Shopify products if available, otherwise static
   const sourceProducts = useMemo(() => {
     if (dbProducts.length > 0) {
       return dbProducts.map(p => ({
@@ -76,10 +97,13 @@ function ShopContent() {
         tags: p.tags || [],
         image: p.image_url || '',
         desc: p.description || '',
+        variantId: (p as any).variantId || '',
+        handle: (p as any).handle || '',
       }));
     }
     return allProducts;
   }, [dbProducts]);
+
 
   // Filter and Sort Logic
   const filteredProducts = useMemo(() => {
@@ -238,7 +262,7 @@ function ShopContent() {
                   tags={product.tags}
                   productImage={product.image}
                   overlayText={product.desc}
-                  onAddToCart={() => handleAddToCart({ id: product.id, title: product.title, brand: product.brand, price: product.price, image: product.image, weight: (product as unknown as Record<string, unknown>).weight as number || 0.1 })}
+                  onAddToCart={() => handleAddToCart({ id: product.id, title: product.title, brand: product.brand, price: product.price, image: product.image, weight: (product as unknown as Record<string, unknown>).weight as number || 0.1, variantId: (product as any).variantId })}
                 />
               </motion.div>
             ))}

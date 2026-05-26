@@ -10,6 +10,7 @@ export interface CartItem {
   image: string;
   quantity: number;
   weight?: number; // weight in kg per unit (defaults to 0.1 if not set)
+  variantId?: string; // live shopify variant ID
 }
 
 interface CartContextType {
