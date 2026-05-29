@@ -59,6 +59,7 @@ export default function CartPage() {
             quantity: item.quantity,
             weight: item.weight || 0.1,
             image: item.image,
+            variantId: item.variantId,
           })),
           shippingCost: selectedShipping.price,
           shippingService: selectedShipping.name,

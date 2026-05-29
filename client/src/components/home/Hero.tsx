@@ -124,20 +124,61 @@ const slides: Slide[] = [
 const SLIDE_DURATION = 6000;
 
 export default function Hero() {
+  const [activeSlides, setActiveSlides] = useState<Slide[]>(slides);
   const [current, setCurrent] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [progress, setProgress] = useState(0);
   const progressInterval = useRef<NodeJS.Timeout | null>(null);
 
-  const next = useCallback(() => {
-    setCurrent((prev) => (prev + 1) % slides.length);
-    setProgress(0);
+  // Fetch dynamic banners from Shopify Storefront API
+  useEffect(() => {
+    import("@/lib/shopify")
+      .then(({ getShopifyBanners }) => {
+        getShopifyBanners()
+          .then((data) => {
+            if (data && data.length > 0) {
+              const mapped: Slide[] = data.map((item, index) => {
+                const isEven = index % 2 === 0;
+                return {
+                  brand: item.title || "Premium Selection",
+                  tagline: "Estd. 1928 · Heritage Quality",
+                  title: item.title || "The Soul of",
+                  titleAccent: "Delhi's Kitchen",
+                  description: "Authentic premium spices crafted from age-old traditional recipes passed down through generations.",
+                  cta: "Explore Collection",
+                  image: item.imageUrl,
+                  bgMode: "fullbleed" as const,
+                  bgFrom: isEven ? "#0f1410" : "#1c0505",
+                  bgTo: isEven ? "#1a241c" : "#2d0a0a",
+                  accentColor: "#D4AF37",
+                  textColor: "text-white",
+                  descColor: "text-white/80",
+                  badgeBg: "bg-accent/20 border-accent/40 text-accent",
+                  overlay: "from-black via-black/75 to-transparent",
+                  trustBadge: "100% Pure & Certified Spices",
+                };
+              });
+              setActiveSlides(mapped);
+            }
+          })
+          .catch((err) => {
+            console.error("[Shopify Banners] Error loading dynamic banners:", err);
+          });
+      })
+      .catch((err) => {
+        console.error("[Shopify Banners] Failed to import shopify lib:", err);
+      });
   }, []);
 
-  const prev = useCallback(() => {
-    setCurrent((prev) => (prev - 1 + slides.length) % slides.length);
+  const next = useCallback(() => {
+    setCurrent((prev) => (prev + 1) % activeSlides.length);
     setProgress(0);
-  }, []);
+  }, [activeSlides.length]);
+
+  const prev = useCallback(() => {
+    setCurrent((prev) => (prev - 1 + activeSlides.length) % activeSlides.length);
+    setProgress(0);
+  }, [activeSlides.length]);
 
   useEffect(() => {
     if (progressInterval.current) clearInterval(progressInterval.current);
@@ -158,7 +199,7 @@ export default function Hero() {
     };
   }, [next, isHovered, current]);
 
-  const slide = slides[current];
+  const slide = activeSlides[current] || activeSlides[0] || slides[0];
 
   return (
     <section
@@ -330,7 +371,7 @@ export default function Hero() {
       <div className="absolute bottom-0 left-0 right-0 z-30 flex items-center justify-between px-6 lg:px-12 pb-5">
         {/* Slide indicators */}
         <div className="flex items-center gap-3">
-          {slides.map((_, i) => (
+          {activeSlides.map((_, i) => (
             <button
               key={i}
               onClick={() => { setCurrent(i); setProgress(0); }}
@@ -357,7 +398,7 @@ export default function Hero() {
         {/* Counter + Arrows */}
         <div className="flex items-center gap-3">
           <span className="text-white/50 text-[10px] font-bold tracking-widest hidden sm:block">
-            {String(current + 1).padStart(2, "0")} / {String(slides.length).padStart(2, "0")}
+            {String(current + 1).padStart(2, "0")} / {String(activeSlides.length).padStart(2, "0")}
           </span>
           <button
             onClick={prev}

@@ -156,3 +156,63 @@ export async function createShopifyCheckout(items: { variantId: string; quantity
 
   return null;
 }
+
+export interface ShopifyBanner {
+  imageUrl: string;
+  title: string;
+}
+
+export async function getShopifyBanners(): Promise<ShopifyBanner[]> {
+  const query = `
+    query GetBanners {
+      metaobjects(type: "new_image", first: 10) {
+        edges {
+          node {
+            id
+            fields {
+              key
+              value
+              reference {
+                ... on MediaImage {
+                  image {
+                    url
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  try {
+    const response = await shopifyFetch({ query });
+    if (!response || !response.data || !response.data.metaobjects) {
+      console.warn('[Shopify Banners] No metaobjects found or API error.');
+      return [];
+    }
+
+    const edges = response.data.metaobjects.edges;
+    return edges.map((edge: any) => {
+      const node = edge.node;
+      const fields = node.fields || [];
+
+      // Find the banner image field (handle could be banner_imag or banner_image)
+      const bannerImagField = fields.find((f: any) => f.key === 'banner_imag' || f.key === 'banner_image');
+      const newField = fields.find((f: any) => f.key === 'new');
+
+      const imageUrl = bannerImagField?.reference?.image?.url || '';
+      const title = newField?.value || '';
+
+      return {
+        imageUrl,
+        title,
+      };
+    }).filter((b: ShopifyBanner) => b.imageUrl !== ''); // Only return banners that have a valid uploaded image
+  } catch (error) {
+    console.error('[Shopify Banners] Error parsing custom banners:', error);
+    return [];
+  }
+}
+
