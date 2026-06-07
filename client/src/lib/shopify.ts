@@ -43,10 +43,19 @@ export interface ShopifyProduct {
 }
 
 export async function getShopifyProducts(): Promise<ShopifyProduct[]> {
+  let allProductsData: any[] = [];
+  let hasNextPage = true;
+  let cursor: string | null = null;
+  const limit = 2500; // Upper limit requested by the user
+
   const query = `
-    query GetProducts {
-      products(first: 250) {
+    query GetProducts($cursor: String) {
+      products(first: 250, after: $cursor) {
+        pageInfo {
+          hasNextPage
+        }
         edges {
+          cursor
           node {
             id
             title
@@ -82,16 +91,30 @@ export async function getShopifyProducts(): Promise<ShopifyProduct[]> {
     }
   `;
 
-  const response = await shopifyFetch({ query });
-  
-  if (!response || !response.data || !response.data.products) {
-    console.warn('[Shopify] Failed to fetch products or empty response, using fallback.');
-    return [];
+  while (hasNextPage && allProductsData.length < limit) {
+    const response = await shopifyFetch({ 
+      query, 
+      variables: cursor ? { cursor } : {} 
+    });
+
+    if (!response || !response.data || !response.data.products) {
+      console.warn('[Shopify] Failed to fetch products or empty response during pagination.');
+      break;
+    }
+
+    const products = response.data.products;
+    const edges = products.edges || [];
+    allProductsData = [...allProductsData, ...edges];
+
+    hasNextPage = products.pageInfo?.hasNextPage || false;
+    if (edges.length > 0) {
+      cursor = edges[edges.length - 1].cursor;
+    } else {
+      hasNextPage = false;
+    }
   }
 
-  const productsData = response.data.products.edges;
-
-  return productsData.map((edge: any) => {
+  return allProductsData.map((edge: any) => {
     const node = edge.node;
     const variant = node.variants?.edges?.[0]?.node;
     const priceAmount = parseFloat(variant?.price?.amount || '0');
