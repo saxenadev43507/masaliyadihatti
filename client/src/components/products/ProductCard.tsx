@@ -8,6 +8,7 @@ interface ProductCardProps {
   title: string;
   brand: string;
   price: string;
+  compareAtPrice?: string;
   rating: number;
   tags: string[];
   productImage: string;
@@ -19,6 +20,7 @@ export default function ProductCard({
   title,
   brand,
   price,
+  compareAtPrice,
   rating,
   tags,
   productImage,
@@ -55,7 +57,7 @@ export default function ProductCard({
           className="relative z-10 w-full h-full flex items-center justify-center p-4"
         >
           <img 
-            src={productImage} 
+            src={productImage || 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=400&q=80'} 
             alt={title} 
             className="w-full h-full object-contain mix-blend-multiply transition-transform duration-500"
           />
@@ -80,9 +82,16 @@ export default function ProductCard({
         </div>
 
         <div className="flex items-center justify-between pt-1">
-          <span className="text-2xl font-black text-gray-900 tracking-tight">
-            {price}
-          </span>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-black text-gray-900 tracking-tight">
+              {price}
+            </span>
+            {compareAtPrice && (
+              <span className="text-xs text-gray-400 line-through font-bold">
+                {compareAtPrice}
+              </span>
+            )}
+          </div>
           <div className="flex gap-1">
             {tags.slice(0, 1).map((tag, i) => (
               <span key={i} className="text-[8px] font-black uppercase tracking-tighter bg-accent/10 text-accent px-2 py-1 rounded-md border border-accent/20">

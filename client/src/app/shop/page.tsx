@@ -56,6 +56,7 @@ function ShopContent() {
                 brand: p.brand,
                 category: p.category,
                 price: p.price,
+                compareAtPrice: p.compareAtPrice,
                 rating: p.rating,
                 tags: p.tags || [],
                 image_url: p.image,
@@ -92,6 +93,7 @@ function ShopContent() {
         brand: p.brand,
         category: p.category,
         price: p.price,
+        compareAtPrice: (p as any).compareAtPrice,
         weight: (p as unknown as Record<string, unknown>).weight as number || 0.1,
         rating: p.rating,
         tags: p.tags || [],
@@ -258,6 +260,7 @@ function ShopContent() {
                   title={product.title}
                   brand={product.brand}
                   price={product.price}
+                  compareAtPrice={(product as any).compareAtPrice}
                   rating={product.rating}
                   tags={product.tags}
                   productImage={product.image}

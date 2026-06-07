@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useRef, useEffect, Suspense } from 'react';
+import React, { useMemo, useRef, useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -38,6 +38,22 @@ function RecipesContent() {
   const searchParams = useSearchParams();
   const activeCategory = searchParams.get('category') || 'all';
   const recipesRef = useRef<HTMLDivElement>(null);
+  const [recipes, setRecipes] = useState<typeof allRecipes>(allRecipes);
+
+  useEffect(() => {
+    import('@/lib/shopify')
+      .then(({ getShopifyRecipes }) => {
+        getShopifyRecipes()
+          .then(data => {
+            if (data && data.length > 0) {
+              setRecipes(data as any);
+            }
+          })
+          .catch((err) => {
+            console.error('[Shopify Recipes] Error loading dynamic recipes:', err);
+          });
+      });
+  }, []);
 
   useEffect(() => {
     if (activeCategory !== 'all' && recipesRef.current) {
@@ -48,9 +64,9 @@ function RecipesContent() {
   }, [activeCategory]);
 
   const filteredRecipes = useMemo(() => {
-    if (activeCategory === 'all') return allRecipes;
-    return allRecipes.filter(r => r.category === activeCategory);
-  }, [activeCategory]);
+    if (activeCategory === 'all') return recipes;
+    return recipes.filter(r => r.category === activeCategory);
+  }, [activeCategory, recipes]);
 
   const activeCategoryData = recipeCategories.find(c => c.slug === activeCategory);
 
@@ -66,98 +82,55 @@ function RecipesContent() {
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
             <span className="text-accent font-black uppercase tracking-[0.4em] text-[9px] mb-4 block">Cook Like a Master</span>
             <h1 className="text-4xl md:text-6xl font-serif font-black text-white mb-6 tracking-tight">
-              {activeCategoryData ? <>{activeCategoryData.name}</> : <>Spice <span className="text-accent">Recipes</span></>}
+              Spice <span className="text-accent">Recipes</span>
             </h1>
             <p className="text-gray-400 max-w-2xl mx-auto text-lg font-medium leading-relaxed">
-              {activeCategoryData
-                ? `Browse our collection of ${activeCategoryData.name.toLowerCase()} recipes — each paired with the exact spice blends you need.`
-                : "Authentic Indian recipes perfected over generations — each paired with the exact spice blends you need."
-              }
+              Authentic Indian recipes perfected over generations — each paired with the exact spice blends you need.
             </p>
           </motion.div>
         </div>
       </section>
 
-      {/* Category Filter Tabs */}
-      <section className="max-w-7xl mx-auto px-4 mb-12 border-b border-gray-100">
-        <div className="flex flex-wrap justify-center gap-2 md:gap-6 overflow-x-auto no-scrollbar pb-1">
-          <Link href="/recipes" className={`relative px-6 py-4 text-xs md:text-sm font-black uppercase tracking-widest transition-all duration-300 whitespace-nowrap ${activeCategory === 'all' ? 'text-accent' : 'text-gray-400 hover:text-primary'}`}>
-            All Recipes
-            {activeCategory === 'all' && <motion.div layoutId="recipeTab" className="absolute bottom-0 left-0 right-0 h-1 bg-accent rounded-t-full" />}
-          </Link>
-          {recipeCategories.map((cat) => (
-            <Link key={cat.slug} href={`/recipes?category=${cat.slug}`} className={`relative px-6 py-4 text-xs md:text-sm font-black uppercase tracking-widest transition-all duration-300 whitespace-nowrap ${activeCategory === cat.slug ? 'text-accent' : 'text-gray-400 hover:text-primary'}`}>
-              {cat.name}
-              {activeCategory === cat.slug && <motion.div layoutId="recipeTab" className="absolute bottom-0 left-0 right-0 h-1 bg-accent rounded-t-full" />}
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* Recipe Categories Grid (only show when 'all') */}
-      {activeCategory === 'all' && (
-        <section className="max-w-7xl mx-auto px-4 mb-20">
-          <div className="text-center mb-14">
-            <span className="text-accent font-black uppercase tracking-[0.4em] text-[9px] mb-3 block">Browse By Style</span>
-            <h2 className="text-3xl md:text-4xl font-serif font-black text-primary tracking-tight">Recipe <span className="text-accent">Categories</span></h2>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {recipeCategories.map((cat, i) => (
-              <motion.div key={cat.slug} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.08 * i }}>
-                <Link href={`/recipes?category=${cat.slug}`} className={`group block p-8 rounded-3xl ${cat.bgLight} border ${cat.borderColor} hover:shadow-xl hover:scale-[1.02] transition-all duration-500`}>
-                  <div className="flex items-start gap-5">
-                    <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${cat.color} flex items-center justify-center text-white shadow-lg`}>{cat.icon}</div>
-                    <div className="flex-1">
-                      <h3 className="text-xl font-bold text-primary mb-1 group-hover:text-accent transition-colors">{cat.name}</h3>
-                      <p className="text-gray-500 text-sm">{cat.time} · {cat.count} recipes</p>
-                    </div>
-                    <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-accent group-hover:translate-x-1 transition-all mt-1" />
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-        </section>
-      )}
-
       {/* Recipes Grid */}
       <section ref={recipesRef} className="max-w-7xl mx-auto px-4 mb-20">
         <div className="text-center mb-14">
           <span className="text-accent font-black uppercase tracking-[0.4em] text-[9px] mb-3 block">
-            {activeCategoryData ? activeCategoryData.time : "Try These First"}
+            Try These First
           </span>
           <h2 className="text-3xl md:text-4xl font-serif font-black text-primary tracking-tight">
-            {activeCategoryData ? <>{activeCategoryData.name} <span className="text-accent">Recipes</span></> : <>Featured <span className="text-accent">Recipes</span></>}
+            Featured <span className="text-accent">Recipes</span>
           </h2>
-          <p className="text-gray-400 mt-3 text-sm">{filteredRecipes.length} recipe{filteredRecipes.length !== 1 ? 's' : ''} found</p>
+          <p className="text-gray-400 mt-3 text-sm">{recipes.length} recipe{recipes.length !== 1 ? 's' : ''} found</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredRecipes.map((recipe, i) => (
+          {recipes.map((recipe, i) => (
             <motion.div key={recipe.title} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.08 * i }}
-              className="group rounded-3xl overflow-hidden border border-gray-100 hover:shadow-2xl hover:border-accent/20 transition-all duration-500 bg-white">
-              <div className="relative h-56 overflow-hidden">
-                <img src={recipe.image} alt={recipe.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
-                  <Link href={`/recipes?category=${recipe.category}`} className="bg-white/90 backdrop-blur-sm text-primary text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider hover:bg-accent hover:text-white transition-colors">
-                    {recipeCategories.find(c => c.slug === recipe.category)?.name || recipe.category}
-                  </Link>
-                  <span className="bg-accent text-white text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider">{recipe.difficulty}</span>
+              className="group rounded-3xl overflow-hidden border border-gray-100 hover:shadow-2xl hover:border-accent/20 transition-all duration-500 bg-white cursor-pointer">
+              <Link href={`/recipes/${(recipe as any).handle || recipe.slug}`}>
+                <div className="relative h-56 overflow-hidden">
+                  <img src={recipe.image} alt={recipe.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                  <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
+                    <span className="bg-white/90 backdrop-blur-sm text-primary text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider">
+                      {recipeCategories.find(c => c.slug === recipe.category)?.name || recipe.category}
+                    </span>
+                    <span className="bg-accent text-white text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider">{recipe.difficulty}</span>
+                  </div>
                 </div>
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-serif font-black text-primary mb-2 group-hover:text-accent transition-colors">{recipe.title}</h3>
-                <p className="text-gray-500 text-sm leading-relaxed mb-4">{recipe.desc}</p>
-                <div className="flex items-center gap-4 text-xs text-gray-400 font-bold uppercase tracking-wider mb-4">
-                  <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {recipe.time}</span>
-                  <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {recipe.serves}</span>
+                <div className="p-6">
+                  <h3 className="text-xl font-serif font-black text-primary mb-2 group-hover:text-accent transition-colors duration-300">{recipe.title}</h3>
+                  <p className="text-gray-500 text-sm leading-relaxed mb-4">{recipe.desc}</p>
+                  <div className="flex items-center gap-4 text-xs text-gray-400 font-bold uppercase tracking-wider mb-4">
+                    <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {recipe.time}</span>
+                    <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {recipe.serves}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {recipe.spices.map(s => (
+                      <span key={s} className="text-[10px] font-bold bg-accent/10 text-accent px-3 py-1 rounded-full border border-accent/20">{s}</span>
+                    ))}
+                  </div>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {recipe.spices.map(s => (
-                    <span key={s} className="text-[10px] font-bold bg-accent/10 text-accent px-3 py-1 rounded-full border border-accent/20">{s}</span>
-                  ))}
-                </div>
-              </div>
+              </Link>
             </motion.div>
           ))}
         </div>

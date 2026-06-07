@@ -33,6 +33,7 @@ export default function ProductDetailPage() {
                 brand: p.brand,
                 category: p.category,
                 price: p.price,
+                compareAtPrice: p.compareAtPrice,
                 rating: p.rating,
                 tags: p.tags || [],
                 image: p.image,
@@ -118,7 +119,7 @@ export default function ProductDetailPage() {
                   <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Pure Heritage</span>
                 </div>
               </div>
-              <img src={product.image} alt={product.title} className="w-full h-[400px] object-contain mix-blend-multiply" />
+              <img src={product.image || 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=600&q=80'} alt={product.title} className="w-full h-[400px] object-contain mix-blend-multiply" />
             </div>
           </motion.div>
 
@@ -139,7 +140,12 @@ export default function ProductDetailPage() {
                 <span key={i} className="text-[9px] font-black uppercase tracking-tighter bg-accent/10 text-accent px-3 py-1.5 rounded-lg border border-accent/20">{tag}</span>
               ))}
             </div>
-            <div className="text-4xl font-black text-primary mb-8">{product.price}</div>
+            <div className="flex items-baseline gap-4 mb-8">
+              <span className="text-4xl font-black text-primary">{product.price}</span>
+              {(product as any).compareAtPrice && (
+                <span className="text-xl text-gray-400 line-through font-bold">{(product as any).compareAtPrice}</span>
+              )}
+            </div>
             <div className="flex items-center gap-4 mb-8">
               <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden">
                 <button onClick={() => setQuantity(q => Math.max(1, q - 1))} className="w-12 h-12 flex items-center justify-center hover:bg-gray-50"><Minus className="w-4 h-4" /></button>
