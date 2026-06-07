@@ -45,7 +45,7 @@ export interface ShopifyProduct {
 export async function getShopifyProducts(): Promise<ShopifyProduct[]> {
   const query = `
     query GetProducts {
-      products(first: 50) {
+      products(first: 250) {
         edges {
           node {
             id
