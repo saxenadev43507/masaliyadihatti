@@ -87,7 +87,10 @@ export default function ProductCard({
               {price}
             </span>
             {compareAtPrice && (
-              <span className="text-xs text-red-500 line-through font-bold">
+              <span 
+                className="text-xs text-red-500 line-through font-bold"
+                style={{ textDecorationColor: 'black' }}
+              >
                 {compareAtPrice}
               </span>
             )}

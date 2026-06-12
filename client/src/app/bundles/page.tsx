@@ -185,7 +185,12 @@ function BundlesContent() {
                   </div>
                   <div className="lg:w-64 flex flex-col items-center lg:items-end gap-4">
                     <div className="text-center lg:text-right">
-                      <div className="text-sm text-red-500 line-through font-medium">{bundle.originalPrice} AUD</div>
+                      <div 
+                        className="text-sm text-red-500 line-through font-medium"
+                        style={{ textDecorationColor: 'black' }}
+                      >
+                        {bundle.originalPrice} AUD
+                      </div>
                       <div className="text-4xl font-black text-primary">{bundle.bundlePrice}</div>
                       <div className="text-sm font-bold text-accent">Save {bundle.savings}</div>
                     </div>
