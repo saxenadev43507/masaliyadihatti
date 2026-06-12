@@ -143,7 +143,7 @@ export default function ProductDetailPage() {
             <div className="flex items-baseline gap-4 mb-8">
               <span className="text-4xl font-black text-primary">{product.price}</span>
               {(product as any).compareAtPrice && (
-                <span className="text-xl text-gray-400 line-through font-bold">{(product as any).compareAtPrice}</span>
+                <span className="text-xl text-red-500 line-through font-bold">{(product as any).compareAtPrice}</span>
               )}
             </div>
             <div className="flex items-center gap-4 mb-8">
