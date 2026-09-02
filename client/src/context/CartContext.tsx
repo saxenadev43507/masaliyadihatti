@@ -16,8 +16,8 @@ export interface CartItem {
 interface CartContextType {
   items: CartItem[];
   addToCart: (item: Omit<CartItem, 'quantity'>) => void;
-  removeFromCart: (id: number) => void;
-  updateQuantity: (id: number, quantity: number) => void;
+  removeFromCart: (id: number, weight?: number) => void;
+  updateQuantity: (id: number, quantity: number, weight?: number) => void;
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;
@@ -51,24 +51,28 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [items, isLoaded]);
 
   const addToCart = useCallback((item: Omit<CartItem, 'quantity'>) => {
+    const itemWithDefaultWeight = {
+      ...item,
+      weight: item.weight !== undefined ? item.weight : 0.1
+    };
     setItems(prev => {
-      const existing = prev.find(i => i.id === item.id);
+      const existing = prev.find(i => i.id === itemWithDefaultWeight.id && i.weight === itemWithDefaultWeight.weight);
       if (existing) {
-        return prev.map(i => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i);
+        return prev.map(i => (i.id === itemWithDefaultWeight.id && i.weight === itemWithDefaultWeight.weight) ? { ...i, quantity: i.quantity + 1 } : i);
       }
-      return [...prev, { ...item, quantity: 1 }];
+      return [...prev, { ...itemWithDefaultWeight, quantity: 1 }];
     });
   }, []);
 
-  const removeFromCart = useCallback((id: number) => {
-    setItems(prev => prev.filter(i => i.id !== id));
+  const removeFromCart = useCallback((id: number, weight?: number) => {
+    setItems(prev => prev.filter(i => !(i.id === id && (weight === undefined || i.weight === weight))));
   }, []);
 
-  const updateQuantity = useCallback((id: number, quantity: number) => {
+  const updateQuantity = useCallback((id: number, quantity: number, weight?: number) => {
     if (quantity <= 0) {
-      setItems(prev => prev.filter(i => i.id !== id));
+      setItems(prev => prev.filter(i => !(i.id === id && (weight === undefined || i.weight === weight))));
     } else {
-      setItems(prev => prev.map(i => i.id === id ? { ...i, quantity } : i));
+      setItems(prev => prev.map(i => (i.id === id && (weight === undefined || i.weight === weight)) ? { ...i, quantity } : i));
     }
   }, []);
 

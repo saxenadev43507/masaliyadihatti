@@ -42,12 +42,18 @@ export default function ProductCard({
       </div>
 
       {/* Wishlist Button */}
-      <button className="absolute top-6 right-6 z-30 w-10 h-10 rounded-full bg-white shadow-sm border border-gray-50 flex items-center justify-center text-gray-400 hover:text-red-500 hover:scale-110 transition-all">
+      <button 
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        }}
+        className="absolute top-6 right-6 z-30 w-10 h-10 rounded-full bg-white shadow-sm border border-gray-50 flex items-center justify-center text-gray-400 hover:text-red-500 hover:scale-110 transition-all"
+      >
         <Heart className="w-4 h-4" />
       </button>
 
       {/* Product Image Stage */}
-      <div className="relative flex-grow flex items-center justify-center mb-6 pt-8 bg-gray-50 rounded-[1.5rem] overflow-hidden shadow-inner">
+      <div className="relative flex-grow flex items-center justify-center mb-6 pt-8 bg-gray-50 rounded-[1.5rem] overflow-hidden shadow-inner group-hover:bg-gradient-to-br group-hover:from-gray-50 group-hover:to-accent/5 transition-all duration-500">
         <motion.div
           variants={{
             initial: { y: 0, rotate: 0 },
@@ -124,21 +130,6 @@ export default function ProductCard({
           <ShoppingCart className="w-4 h-4" />
           <span className="text-xs font-black uppercase tracking-widest text-white">Add to Collection</span>
         </button>
-      </motion.div>
-
-      {/* Storytelling Tooltip (On Hover) */}
-      <motion.div
-        variants={{
-          initial: { opacity: 0, scale: 0.9 },
-          hover: { opacity: 1, scale: 1 }
-        }}
-        className="absolute inset-x-6 top-[40%] z-50 pointer-events-none"
-      >
-        <div className="bg-white/95 backdrop-blur-md p-4 rounded-2xl border border-gray-100 shadow-xl text-center">
-          <p className="text-[11px] font-serif italic text-primary font-bold leading-relaxed">
-            &quot;{overlayText}&quot;
-          </p>
-        </div>
       </motion.div>
     </motion.div>
   );

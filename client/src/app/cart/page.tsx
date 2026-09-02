@@ -166,7 +166,7 @@ export default function CartPage() {
             <AnimatePresence>
               {items.map(item => (
                 <motion.div
-                  key={item.id}
+                  key={`${item.id}-${item.weight}`}
                   layout
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -185,16 +185,16 @@ export default function CartPage() {
                     </div>
                   </div>
                   <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden bg-white">
-                    <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="w-9 h-9 flex items-center justify-center hover:bg-gray-50"><Minus className="w-3 h-3" /></button>
+                    <button onClick={() => updateQuantity(item.id, item.quantity - 1, item.weight)} className="w-9 h-9 flex items-center justify-center hover:bg-gray-50"><Minus className="w-3 h-3" /></button>
                     <span className="w-9 h-9 flex items-center justify-center font-bold text-sm border-x border-gray-200">{item.quantity}</span>
-                    <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="w-9 h-9 flex items-center justify-center hover:bg-gray-50"><Plus className="w-3 h-3" /></button>
+                    <button onClick={() => updateQuantity(item.id, item.quantity + 1, item.weight)} className="w-9 h-9 flex items-center justify-center hover:bg-gray-50"><Plus className="w-3 h-3" /></button>
                   </div>
                   <div className="text-right w-24">
                     <span className="text-lg font-black text-primary">
                       ${(parseFloat(item.price.replace(/[^0-9.]/g, '')) * item.quantity).toFixed(2)}
                     </span>
                   </div>
-                  <button onClick={() => removeFromCart(item.id)} className="w-9 h-9 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all">
+                  <button onClick={() => removeFromCart(item.id, item.weight)} className="w-9 h-9 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all">
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </motion.div>

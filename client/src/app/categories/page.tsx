@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Flame, Wind, Zap, Crown, Utensils, Sparkles, ArrowRight, ChevronRight } from 'lucide-react';
-import { allProducts } from '@/data/products';
 import ProductCard from '@/components/products/ProductCard';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
@@ -33,13 +32,45 @@ const specialCollections = [
 ];
 
 export default function CategoriesPage() {
-  const bestSellers = useMemo(() => allProducts.filter(p => p.category === "Best Sellers").slice(0, 4), []);
   const { addToCart } = useCart();
   const { user, setShowAuthModal } = useAuth();
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleAddToCart = (p: { id: number; title: string; brand: string; price: string; image: string; weight?: number }) => {
+  useEffect(() => {
+    import('@/lib/shopify')
+      .then(({ getShopifyProducts }) => {
+        getShopifyProducts()
+          .then(data => {
+            if (data && data.length > 0) {
+              setProducts(data.map((p, index) => ({
+                id: index + 100, // Safe local numeric ID mapping
+                title: p.title,
+                brand: p.brand,
+                category: p.category,
+                price: p.price,
+                image: p.image,
+                rating: p.rating,
+                tags: p.tags,
+                desc: p.desc,
+                weight: p.weight,
+                variantId: p.variantId
+              })));
+            }
+          })
+          .catch((err) => console.error('[Shopify Categories] Error:', err))
+          .finally(() => setLoading(false));
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const bestSellers = useMemo(() => {
+    return products.filter(p => p.category === "Best Sellers" || p.tags.some((t: string) => t.toLowerCase().includes("best"))).slice(0, 4);
+  }, [products]);
+
+  const handleAddToCart = (p: any) => {
     if (!user) { setShowAuthModal(true); return; }
-    addToCart(p);
+    addToCart({ id: p.id, title: p.title, brand: p.brand, price: p.price, image: p.image, weight: p.weight, variantId: p.variantId });
   };
 
   return (
@@ -144,13 +175,21 @@ export default function CategoriesPage() {
             View All <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {bestSellers.map(p => (
-            <Link key={p.id} href={`/product/${p.id}`}>
-              <ProductCard title={p.title} brand={p.brand} price={p.price} rating={p.rating} tags={p.tags} productImage={p.image} overlayText={p.desc} onAddToCart={() => handleAddToCart({ id: p.id, title: p.title, brand: p.brand, price: p.price, image: p.image, weight: p.weight })} />
-            </Link>
-          ))}
-        </div>
+        
+        {loading ? (
+          <div className="flex flex-col items-center py-10 gap-3">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-accent"></div>
+            <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Loading Best Sellers...</span>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {bestSellers.map(p => (
+              <Link key={p.id} href={`/product/${p.id}`}>
+                <ProductCard title={p.title} brand={p.brand} price={p.price} rating={p.rating} tags={p.tags} productImage={p.image} overlayText={p.desc} onAddToCart={() => handleAddToCart(p)} />
+              </Link>
+            ))}
+          </div>
+        )}
       </section>
     </main>
   );

@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useMemo, useRef, useEffect, Suspense } from 'react';
+import React, { useMemo, useRef, useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Package, Gift, Sparkles, ArrowRight, Star, Crown, Flame, ShoppingCart, CheckCircle2, Zap } from 'lucide-react';
-import { allProducts } from '@/data/products';
 import ProductCard from '@/components/products/ProductCard';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
@@ -74,7 +73,36 @@ function BundlesContent() {
   const bundleRef = useRef<HTMLDivElement>(null);
   const { addToCart } = useCart();
   const { user, setShowAuthModal } = useAuth();
-  const featuredProducts = useMemo(() => allProducts.slice(0, 4), []);
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    import('@/lib/shopify')
+      .then(({ getShopifyProducts }) => {
+        getShopifyProducts()
+          .then(data => {
+            if (data && data.length > 0) {
+              setProducts(data.map((p, index) => ({
+                id: index + 100, // Safe local numeric ID mapping
+                title: p.title,
+                brand: p.brand,
+                price: p.price,
+                image: p.image,
+                rating: p.rating,
+                tags: p.tags,
+                desc: p.desc,
+                weight: p.weight,
+                variantId: p.variantId
+              })));
+            }
+          })
+          .catch((err) => console.error('[Shopify Bundles] Error:', err))
+          .finally(() => setLoading(false));
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const featuredProducts = useMemo(() => products.slice(0, 4), [products]);
 
   useEffect(() => {
     if (activeBundle !== 'all' && bundleRef.current) {
@@ -194,7 +222,7 @@ function BundlesContent() {
                       <div className="text-4xl font-black text-primary">{bundle.bundlePrice}</div>
                       <div className="text-sm font-bold text-accent">Save {bundle.savings}</div>
                     </div>
-                    <button onClick={() => { if (!user) { setShowAuthModal(true); return; } const mp = allProducts.find(p => bundle.items.includes(p.title)); if (mp) addToCart({ id: mp.id, title: bundle.name + " Bundle", brand: "Masaliya", price: bundle.bundlePrice + " AUD", image: mp.image, weight: bundle.items.length * 0.1 }); }}
+                     <button onClick={() => { if (!user) { setShowAuthModal(true); return; } const mp = products.find(p => bundle.items.some(bi => p.title.toLowerCase().includes(bi.toLowerCase()))) || products[0]; if (mp) addToCart({ id: mp.id, title: bundle.name + " Bundle", brand: "Masaliya", price: bundle.bundlePrice + " AUD", image: mp.image, weight: bundle.items.length * 0.1 }); }}
                       className="flex items-center gap-3 bg-primary hover:bg-accent text-white px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all duration-300 shadow-lg hover:shadow-xl whitespace-nowrap">
                       <ShoppingCart className="w-4 h-4" /> Add Bundle
                     </button>

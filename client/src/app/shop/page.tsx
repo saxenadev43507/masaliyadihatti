@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect, Suspense } from 'react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -14,7 +15,6 @@ import {
   Sparkles
 } from 'lucide-react';
 import ProductCard from '@/components/products/ProductCard';
-import { allProducts } from '@/data/products';
 import { getProducts, type DBProduct } from '@/lib/supabase-admin';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
@@ -103,7 +103,7 @@ function ShopContent() {
         handle: (p as any).handle || '',
       }));
     }
-    return allProducts;
+    return [];
   }, [dbProducts]);
 
 
@@ -256,17 +256,19 @@ function ShopContent() {
                 transition={{ duration: 0.3 }}
                 key={product.id}
               >
-                <ProductCard 
-                  title={product.title}
-                  brand={product.brand}
-                  price={product.price}
-                  compareAtPrice={(product as any).compareAtPrice}
-                  rating={product.rating}
-                  tags={product.tags}
-                  productImage={product.image}
-                  overlayText={product.desc}
-                  onAddToCart={() => handleAddToCart({ id: product.id, title: product.title, brand: product.brand, price: product.price, image: product.image, weight: (product as unknown as Record<string, unknown>).weight as number || 0.1, variantId: (product as any).variantId })}
-                />
+                <Link href={`/product/${product.id}`}>
+                  <ProductCard 
+                    title={product.title}
+                    brand={product.brand}
+                    price={product.price}
+                    compareAtPrice={(product as any).compareAtPrice}
+                    rating={product.rating}
+                    tags={product.tags}
+                    productImage={product.image}
+                    overlayText={product.desc}
+                    onAddToCart={() => handleAddToCart({ id: product.id, title: product.title, brand: product.brand, price: product.price, image: product.image, weight: (product as unknown as Record<string, unknown>).weight as number || 0.1, variantId: (product as any).variantId })}
+                  />
+                </Link>
               </motion.div>
             ))}
           </motion.div>

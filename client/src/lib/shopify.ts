@@ -40,6 +40,13 @@ export interface ShopifyProduct {
   desc: string;
   variantId: string;
   handle: string;
+  variants?: {
+    id: string;
+    title: string;
+    price: string;
+    compareAtPrice?: string;
+    weight: number;
+  }[];
 }
 
 export async function getShopifyProducts(): Promise<ShopifyProduct[]> {
@@ -71,10 +78,11 @@ export async function getShopifyProducts(): Promise<ShopifyProduct[]> {
                 }
               }
             }
-            variants(first: 1) {
+            variants(first: 10) {
               edges {
                 node {
                   id
+                  title
                   price {
                     amount
                   }
@@ -116,10 +124,24 @@ export async function getShopifyProducts(): Promise<ShopifyProduct[]> {
 
   return allProductsData.map((edge: any) => {
     const node = edge.node;
-    const variant = node.variants?.edges?.[0]?.node;
-    const priceAmount = parseFloat(variant?.price?.amount || '0');
-    const compareAtPriceAmount = variant?.compareAtPrice?.amount ? parseFloat(variant.compareAtPrice.amount) : 0;
+    const variantEdges = node.variants?.edges || [];
+    const mainVariant = variantEdges[0]?.node;
+    const priceAmount = parseFloat(mainVariant?.price?.amount || '0');
+    const compareAtPriceAmount = mainVariant?.compareAtPrice?.amount ? parseFloat(mainVariant.compareAtPrice.amount) : 0;
     
+    const mappedVariants = variantEdges.map((vEdge: any) => {
+      const vNode = vEdge.node;
+      const vPrice = parseFloat(vNode.price?.amount || '0');
+      const vComparePrice = vNode.compareAtPrice?.amount ? parseFloat(vNode.compareAtPrice.amount) : 0;
+      return {
+        id: vNode.id,
+        title: vNode.title,
+        price: `$${vPrice.toFixed(2)} AUD`,
+        compareAtPrice: vComparePrice > vPrice ? `$${vComparePrice.toFixed(2)} AUD` : undefined,
+        weight: vNode.weight || 0.1
+      };
+    });
+
     // Map Shopify's structure back to the Next.js visual state
     return {
       id: node.id,
@@ -128,13 +150,14 @@ export async function getShopifyProducts(): Promise<ShopifyProduct[]> {
       category: node.productType || 'All Products',
       price: `$${priceAmount.toFixed(2)} AUD`,
       compareAtPrice: compareAtPriceAmount > priceAmount ? `$${compareAtPriceAmount.toFixed(2)} AUD` : undefined,
-      weight: variant?.weight || 0.1, // weight in kg
+      weight: mainVariant?.weight || 0.1, // weight in kg
       rating: parseFloat((Math.random() * (5.0 - 4.6) + 4.6).toFixed(1)), // Fallback rating between 4.6 and 5.0
       tags: node.tags || [],
       image: node.images?.edges?.[0]?.node?.url || '',
       desc: node.description || '',
-      variantId: variant?.id || '',
+      variantId: mainVariant?.id || '',
       handle: node.handle || '',
+      variants: mappedVariants,
     };
   });
 }

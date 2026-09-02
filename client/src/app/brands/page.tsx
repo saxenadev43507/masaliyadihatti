@@ -1,10 +1,9 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowRight, Star, Award, MapPin } from 'lucide-react';
-import { allProducts } from '@/data/products';
 import ProductCard from '@/components/products/ProductCard';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
@@ -84,13 +83,54 @@ const brands = [
   },
 ];
 
+interface ProductType {
+  id: number;
+  title: string;
+  brand: string;
+  price: string;
+  image: string;
+  rating: number;
+  tags: string[];
+  desc: string;
+  weight: number;
+  variantId: string;
+}
+
 export default function BrandsPage() {
   const { addToCart } = useCart();
   const { user, setShowAuthModal } = useAuth();
+  const [products, setProducts] = useState<ProductType[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleAddToCart = (p: { id: number; title: string; brand: string; price: string; image: string; weight?: number }) => {
+  useEffect(() => {
+    import('@/lib/shopify')
+      .then(({ getShopifyProducts }) => {
+        getShopifyProducts()
+          .then(data => {
+            if (data && data.length > 0) {
+              setProducts(data.map((p, index) => ({
+                id: index + 100, // Safe local numeric ID mapping
+                title: p.title,
+                brand: p.brand,
+                price: p.price,
+                image: p.image,
+                rating: p.rating,
+                tags: p.tags,
+                desc: p.desc,
+                weight: p.weight,
+                variantId: p.variantId
+              })));
+            }
+          })
+          .catch((err) => console.error('[Shopify Brands] Error:', err))
+          .finally(() => setLoading(false));
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const handleAddToCart = (p: any) => {
     if (!user) { setShowAuthModal(true); return; }
-    addToCart(p);
+    addToCart({ id: p.id, title: p.title, brand: p.brand, price: p.price, image: p.image, weight: p.weight, variantId: p.variantId });
   };
 
   return (
@@ -116,8 +156,14 @@ export default function BrandsPage() {
 
       {/* Brands List */}
       <section className="max-w-7xl mx-auto px-4 space-y-12">
-        {brands.map((brand, i) => {
-          const brandProducts = allProducts.filter(p => p.brand === brand.filterBrand).slice(0, 4);
+        {loading ? (
+          <div className="flex flex-col items-center py-20 gap-3">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-accent"></div>
+            <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Loading Brands...</span>
+          </div>
+        ) : (
+          brands.map((brand, i) => {
+            const brandProducts = products.filter(p => p.brand.toLowerCase() === brand.filterBrand.toLowerCase()).slice(0, 4);
 
           return (
             <motion.div
@@ -181,7 +227,7 @@ export default function BrandsPage() {
               )}
             </motion.div>
           );
-        })}
+        }))}
       </section>
 
       {/* CTA */}
